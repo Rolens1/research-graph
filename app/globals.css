@@ -183,3 +183,45 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* React Flow Canvas Global Motion & Node Base Styles */
+.react-flow__node {
+  transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.react-flow__node.dragging,
+.react-flow__node.selectable:active {
+  transition: none !important;
+}
+
+.react-flow__node-default {
+  background-color: var(--color-card) !important;
+  color: var(--color-card-foreground) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.react-flow__node-default:hover {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 2px 8px -1px rgba(37, 99, 235, 0.15) !important;
+}
+
+.react-flow__node-default.selected {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary) !important;
+}
+
+.react-flow__handle {
+  background-color: var(--color-accent) !important;
+  border: 2px solid var(--color-card) !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+

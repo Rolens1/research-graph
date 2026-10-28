@@ -45,6 +45,7 @@ next-env.d.ts
 /context/
 /docs/
 memory.md
+/scratch/
 .agents/
 .gemini/
 .claude/
