@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chronocause — Deep Research & Interactive Knowledge Engine
+
+Chronocause is an autonomous deep research platform that performs recursive multi-agent web investigations and renders verified findings into an interactive, causal knowledge graph and chronological timeline.
+
+---
+
+## Architecture Overview
+
+Chronocause pairs autonomous AI inquiry loops with deterministic spatial visualization:
+
+1. **Autonomous Multi-Agent Loop:**
+   - **The Architect:** Decomposes complex queries into hypothesis trees and graph topology.
+   - **The Reader:** Fetches primary web documents and source snippets via Tavily.
+   - **The Fact Checker:** Validates credibility scores, detects disputed claims, and flags contradictions.
+   - **The Visualizer:** Translates raw graph topology into deterministic left-to-right causal layouts.
+
+2. **3-Zone Interactive Workspace:**
+   - **Left Zone (Canvas):** `@xyflow/react` interactive canvas powered by `elkjs` hierarchical auto-layout.
+   - **Right Top (Live Terminal):** Real-time Server-Sent Events (SSE) telemetry feed showing agent thoughts and source scrapes.
+   - **Right Bottom (Timeline):** Chronological milestone track with time-dilation scaling and dispute indicators.
+
+3. **Backend & Relational State:**
+   - **Database:** InsForge PostgreSQL with relational integrity, cascading foreign keys, and Row Level Security (RLS).
+   - **Data Contracts:** Strict Zod schema validation across all agent inputs, API payloads, and graph nodes.
+
+---
+
+## Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org) (App Router, Server Actions, Route Handlers)
+- **Library:** React 19 with strict TypeScript
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com) with semantic CSS design tokens (zero hardcoded hex codes)
+- **Graph & Layout:** `@xyflow/react` and `elkjs`
+- **Database & Auth:** `@insforge/sdk` (PostgreSQL with RLS)
+- **AI SDK:** Vercel AI SDK (`ai`, `@ai-sdk/openai`)
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Prerequisites
+- Node.js 20+ installed
+- Access to InsForge database backend
 
+### 2. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run Development Server
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) in your browser to inspect the application.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Build for Production
+```bash
+npm run build
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+├── app/                  # Next.js App Router (pages, layouts, API routes)
+│   ├── globals.css       # Semantic theme tokens (surfaces, entities, agents)
+│   ├── layout.tsx        # Root layout with Inter & Geist Mono fonts
+│   └── page.tsx          # System verification dashboard
+├── context/              # Architectural guardrails, tokens & schemas
+├── docs/specs/           # Phased feature architectural blueprints
+├── lib/                  # Shared utilities (cn, helpers)
+└── migrations/           # Versioned PostgreSQL DDL migrations
+```

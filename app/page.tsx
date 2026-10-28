@@ -1,69 +1,93 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+// 1. External imports
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { GitBranch } from "lucide-react";
+
+// 2. Internal imports
+import { LandingHeader } from "@/components/search/LandingHeader";
+import { SearchHelm, type SearchDepth } from "@/components/search/SearchHelm";
+import { PromptSeeds } from "@/components/search/PromptSeeds";
+import { LandingFooter } from "@/components/search/LandingFooter";
+import { useAuth } from "@/hooks/useAuth";
+
+// 3. Type definitions (none required beyond SearchDepth)
+
+// 4. Component (Clean Google/Yahoo/Astra style neutral search landing page)
+export function HomePage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [query, setQuery] = useState("");
+  const [depth, setDepth] = useState<SearchDepth>("recon");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSelectSeed = (seedPrompt: string) => {
+    setQuery(seedPrompt);
+  };
+
+  const handleSearch = () => {
+    const trimmed = query.trim();
+    if (!trimmed || isSubmitting) return;
+
+    setIsSubmitting(true);
+    const sessionId = crypto.randomUUID();
+    const targetUrl = `/workspace/${sessionId}?q=${encodeURIComponent(trimmed)}&depth=${depth}`;
+
+    if (!user) {
+      try {
+        sessionStorage.setItem(
+          "pending_investigation",
+          JSON.stringify({ query: trimmed, depth, sessionId })
+        );
+      } catch (err) {
+        console.error("Failed to store pending investigation:", err);
+      }
+      router.push(`/login?redirectTo=${encodeURIComponent(targetUrl)}`);
+      return;
+    }
+
+    router.push(targetUrl);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen bg-neutral-canvas text-foreground flex flex-col justify-between selection:bg-accent/20 selection:text-accent transition-colors duration-200">
+      <LandingHeader />
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-4xl mx-auto w-full space-y-6 my-auto">
+        {/* Brand Emblem & Headline (Clean institutional aesthetic) */}
+        <div className="flex flex-col items-center space-y-3 text-center">
+          <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+            <GitBranch className="h-6 w-6 text-accent" />
+          </div>
+
+          <div className="space-y-1.5">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground">
+              Chronocause
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
+              Autonomous causal event intelligence and verified knowledge graphs.
+            </p>
+          </div>
+        </div>
+
+        {/* Floating Search Bar (matching landing-idea.png) */}
+        <SearchHelm
+          query={query}
+          onQueryChange={setQuery}
+          depth={depth}
+          onDepthChange={setDepth}
+          onSubmit={handleSearch}
+          isSubmitting={isSubmitting}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* Clean Suggestions Card (matching landing-idea.png) */}
+        <PromptSeeds onSelectSeed={handleSelectSeed} />
+      </div>
+
+      <LandingFooter />
+    </main>
   );
 }
+
+export default HomePage;

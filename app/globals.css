@@ -1,26 +1,185 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Default: Clean Neutral Canvas (Google / Yahoo / Astra inspiration) */
+  --background: #f8f9fc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --danger: #ef4444;
+  --danger-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+
+  /* Causal Entity Badges (Clean Neutral Light) */
+  --entity-actor: #0284c7;
+  --entity-actor-foreground: #0369a1;
+  --entity-actor-bg: rgba(2, 132, 199, 0.08);
+
+  --entity-event: #ea580c;
+  --entity-event-foreground: #c2410c;
+  --entity-event-bg: rgba(234, 88, 12, 0.08);
+
+  --entity-technology: #059669;
+  --entity-technology-foreground: #047857;
+  --entity-technology-bg: rgba(5, 150, 105, 0.08);
+
+  --entity-decision: #d97706;
+  --entity-decision-foreground: #b45309;
+  --entity-decision-bg: rgba(217, 119, 6, 0.08);
+
+  --entity-dispute: #dc2626;
+  --entity-dispute-foreground: #b91c1c;
+  --entity-dispute-bg: rgba(220, 38, 38, 0.08);
+
+  /* Multi-Agent Roles */
+  --agent-architect: #2563eb;
+  --agent-reader: #0284c7;
+  --agent-checker: #ea580c;
+  --agent-visualizer: #059669;
+}
+
+/* Dark Mode: Neutral Slate Obsidian (Astra Event Intelligence reference) */
+.dark {
+  --background: #0b0d13;
+  --foreground: #f8fafc;
+  --card: #131722;
+  --card-foreground: #f8fafc;
+  --popover: #171c29;
+  --popover-foreground: #f8fafc;
+  --muted: #1c2233;
+  --muted-foreground: #94a3b8;
+  --border: #22293d;
+  --border-strong: #333d59;
+  --primary: #f8fafc;
+  --primary-foreground: #0b0d13;
+  --secondary: #1a2030;
+  --secondary-foreground: #e2e8f0;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #0b0d13;
+  --danger: #ef4444;
+  --danger-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #0b0d13;
+
+  /* Causal Entity Badges (Obsidian Dark) */
+  --entity-actor: #38bdf8;
+  --entity-actor-foreground: #bae6fd;
+  --entity-actor-bg: rgba(56, 189, 248, 0.12);
+
+  --entity-event: #fb923c;
+  --entity-event-foreground: #fed7aa;
+  --entity-event-bg: rgba(251, 146, 60, 0.12);
+
+  --entity-technology: #34d399;
+  --entity-technology-foreground: #a7f3d0;
+  --entity-technology-bg: rgba(52, 211, 153, 0.12);
+
+  --entity-decision: #fbbf24;
+  --entity-decision-foreground: #fef08a;
+  --entity-decision-bg: rgba(251, 191, 36, 0.12);
+
+  --entity-dispute: #f87171;
+  --entity-dispute-foreground: #fecaca;
+  --entity-dispute-bg: rgba(248, 113, 113, 0.12);
+
+  /* Multi-Agent Roles */
+  --agent-architect: #3b82f6;
+  --agent-reader: #38bdf8;
+  --agent-checker: #fb923c;
+  --agent-visualizer: #34d399;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-entity-actor: var(--entity-actor);
+  --color-entity-actor-foreground: var(--entity-actor-foreground);
+  --color-entity-actor-bg: var(--entity-actor-bg);
+
+  --color-entity-event: var(--entity-event);
+  --color-entity-event-foreground: var(--entity-event-foreground);
+  --color-entity-event-bg: var(--entity-event-bg);
+
+  --color-entity-technology: var(--entity-technology);
+  --color-entity-technology-foreground: var(--entity-technology-foreground);
+  --color-entity-technology-bg: var(--entity-technology-bg);
+
+  --color-entity-decision: var(--entity-decision);
+  --color-entity-decision-foreground: var(--entity-decision-foreground);
+  --color-entity-decision-bg: var(--entity-decision-bg);
+
+  --color-entity-dispute: var(--entity-dispute);
+  --color-entity-dispute-foreground: var(--entity-dispute-foreground);
+  --color-entity-dispute-bg: var(--entity-dispute-bg);
+
+  --color-agent-architect: var(--agent-architect);
+  --color-agent-reader: var(--agent-reader);
+  --color-agent-checker: var(--agent-checker);
+  --color-agent-visualizer: var(--agent-visualizer);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Subtle Neutral Ambient Wash Utilities */
+.bg-neutral-canvas {
+  background-color: var(--background);
+  background-image: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.04) 0%, transparent 60%);
+}
+
+.dark .bg-neutral-canvas {
+  background-image: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.06) 0%, transparent 60%);
+}
+
+/* Clean Soft Card Elevation */
+.shadow-glass {
+  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.06), 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+}
+
+.dark .shadow-glass {
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
