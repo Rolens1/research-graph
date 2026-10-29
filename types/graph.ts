@@ -38,6 +38,12 @@ export const sourceCitationSchema = z.object({
 export type SourceCitation = z.infer<typeof sourceCitationSchema>;
 
 /**
+ * Impact Level for Constellation Star Sizing and Highlights
+ */
+export const impactLevelSchema = z.enum(["critical", "high", "medium", "low"]);
+export type ImpactLevel = z.infer<typeof impactLevelSchema>;
+
+/**
  * Graph Node Schema (Data consumed by React Flow Custom Node)
  */
 export const graphNodeDataSchema = z.object({
@@ -50,6 +56,9 @@ export const graphNodeDataSchema = z.object({
   parentNodeId: z.string().nullable().default(null),
   isUserAdded: z.boolean().default(false),
   isDisputed: z.boolean().default(false).optional(),
+  impactLevel: impactLevelSchema.optional(),
+  timestamp: z.string().optional(),
+  backdropUrl: z.string().optional(),
   sources: z.array(sourceCitationSchema).min(1, "Every node must have at least one source"),
 });
 export type GraphNodeData = z.infer<typeof graphNodeDataSchema>;

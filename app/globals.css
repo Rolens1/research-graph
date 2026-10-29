@@ -225,3 +225,18 @@ body {
   height: 8px !important;
 }
 
+/* Constellation Star Edge Stellar Vibration Animation */
+@keyframes stellarVibration {
+  0% {
+    stroke-dashoffset: 16;
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.85;
+  }
+}
+

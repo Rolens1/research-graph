@@ -2,7 +2,9 @@
 
 import type { Node, Edge } from "@xyflow/react";
 import type { MockGraphNode, MockGraphEdge } from "@/lib/mock-investigation";
-import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
+import type { GraphNodeData, GraphEdgeData, ImpactLevel } from "@/types/graph";
+
+export type CanvasViewMode = "constellation" | "cards";
 
 export type AdaptedGraph = {
   initialNodes: Node<GraphNodeData>[];
@@ -10,8 +12,22 @@ export type AdaptedGraph = {
 };
 
 /**
- * Curated left-to-right causal positions for the Red Sea benchmark investigation.
- * These ensure readable layout during baseline setup before ELK.js integration in Feature 12.
+ * Resolves the visual impact level of a graph node.
+ * Uses explicit node impactLevel if set, falling back to topological edge centrality.
+ */
+export function resolveNodeImpact(
+  node: MockGraphNode | GraphNodeData,
+  connectedEdgesCount: number,
+): ImpactLevel {
+  if (node.impactLevel) return node.impactLevel;
+  if (connectedEdgesCount >= 4) return "critical";
+  if (connectedEdgesCount >= 3 || node.isDisputed) return "high";
+  if (connectedEdgesCount >= 2) return "medium";
+  return "low";
+}
+
+/**
+ * Initial fallback positions for the benchmark investigation prior to dynamic ELK calculation.
  */
 const CURATED_POSITIONS: Record<string, { x: number; y: number }> = {
   "actor_houthi-ansarallah": { x: 60, y: 120 },
@@ -29,6 +45,7 @@ export function adaptMockToReactFlow(
   nodes: MockGraphNode[],
   edges: MockGraphEdge[],
   selectedNodeId?: string | null,
+  viewMode: CanvasViewMode = "constellation",
 ): AdaptedGraph {
   const initialNodes: Node<GraphNodeData>[] = nodes.map((node, index) => {
     const fallbackPosition = {
@@ -36,12 +53,16 @@ export function adaptMockToReactFlow(
       y: 120 + Math.floor(index / 3) * 220,
     };
     const position = CURATED_POSITIONS[node.id] || fallbackPosition;
+    const connectedEdges = edges.filter(
+      (e) => e.source === node.id || e.target === node.id,
+    ).length;
+    const impactLevel = resolveNodeImpact(node, connectedEdges);
 
     return {
       id: node.id,
       position,
       selected: selectedNodeId === node.id,
-      type: "entityNode",
+      type: viewMode === "constellation" ? "constellationStarNode" : "entityNode",
       data: {
         id: node.id,
         label: node.label,
@@ -52,6 +73,9 @@ export function adaptMockToReactFlow(
         parentNodeId: node.parentNodeId,
         isUserAdded: node.isUserAdded,
         isDisputed: node.isDisputed ?? (node.entityType === "dispute"),
+        impactLevel,
+        timestamp: node.timestamp ?? "00:00",
+        backdropUrl: node.backdropUrl,
         sources: node.sources,
       },
     };
@@ -61,7 +85,7 @@ export function adaptMockToReactFlow(
     id: edge.id,
     source: edge.source,
     target: edge.target,
-    type: "causalEdge",
+    type: viewMode === "constellation" ? "constellationEdge" : "causalEdge",
     label: edge.label,
     animated: edge.isDisputed,
     data: {

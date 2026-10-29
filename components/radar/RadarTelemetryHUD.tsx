@@ -47,7 +47,10 @@ export function RadarTelemetryHUD({
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
               <span>VOYAGE IN PROGRESS</span>
             </div>
-            <p className="text-[11px] font-mono text-muted-foreground truncate max-w-xs sm:max-w-md">
+            <p
+              className="text-[11px] font-mono text-muted-foreground truncate max-w-xs sm:max-w-md"
+              suppressHydrationWarning
+            >
               {query || "Autonomous inquiry initialization"}
             </p>
           </div>

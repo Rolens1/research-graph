@@ -29,6 +29,18 @@ type Props = {
   children: React.ReactNode;
 };
 
+function applyThemeToDOM(theme: Theme) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  if (theme === "dark") {
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
+  } else {
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+  }
+}
+
 // 4. Component
 export function ThemeProvider({ children }: Props) {
   // 1. State & hooks
@@ -47,43 +59,24 @@ export function ThemeProvider({ children }: Props) {
   });
   const { user } = useAuth();
 
-  // Helper to apply class to root HTML element
-  const applyThemeToDOM = useCallback((newTheme: Theme) => {
-    if (typeof document !== "undefined") {
-      const root = document.documentElement;
-      if (newTheme === "dark") {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
-    }
-  }, []);
-
-  // Set theme with localStorage and background server synchronization
   const setTheme = useCallback(
     (newTheme: Theme) => {
       setThemeState(newTheme);
       applyThemeToDOM(newTheme);
-
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem(STORAGE_KEY, newTheme);
-        } catch {
-          // Ignore localStorage errors in private mode
-        }
+      try {
+        localStorage.setItem(STORAGE_KEY, newTheme);
+      } catch {
+        // Ignore storage write error
       }
-
-      // Sync to database if authenticated
       if (user) {
         void updateUserThemeAction(newTheme);
       }
     },
-    [applyThemeToDOM, user]
+    [user]
   );
 
   const toggleTheme = useCallback(() => {
-    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
+    setTheme(theme === "dark" ? "light" : "dark");
   }, [theme, setTheme]);
 
   // Sync DOM on mount and reconcile with cloud profile in background if user is authenticated
@@ -107,7 +100,7 @@ export function ThemeProvider({ children }: Props) {
         isMounted = false;
       };
     }
-  }, [user, theme, applyThemeToDOM]);
+  }, [user, theme]);
 
   // 2. Derived values & memoized computations
   const contextValue = useMemo<ThemeContextValue>(

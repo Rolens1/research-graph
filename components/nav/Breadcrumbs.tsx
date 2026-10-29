@@ -1,7 +1,7 @@
 "use client";
 
 // 1. External imports
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, ChevronRight } from "lucide-react";
@@ -15,33 +15,43 @@ type Props = {
   className?: string;
 };
 
+const emptySubscribe = () => () => {};
+
+function getClientTitle(): string {
+  if (typeof window === "undefined") return "Investigation Canvas";
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get("q");
+    if (q) return q;
+    const stored = sessionStorage.getItem("pending_investigation");
+    if (stored) {
+      const parsed = JSON.parse(stored) as { query?: string };
+      if (parsed.query) return parsed.query;
+    }
+  } catch {
+    // Ignore storage or parsing errors
+  }
+  return "Investigation Canvas";
+}
+
+function getServerTitle(): string {
+  return "Investigation Canvas";
+}
+
 // 4. Component
 export function Breadcrumbs({ investigationTitle, className }: Props) {
   const pathname = usePathname();
   const isWorkspaceHome = pathname === "/workspace";
   const isInvestigationPage = pathname.startsWith("/workspace/") && !isWorkspaceHome;
 
-  // Resolve dynamic title from props, URL search param, or fallback
-  const [storedTitle] = React.useState<string>(() => {
-    if (investigationTitle) return investigationTitle;
-    if (typeof window !== "undefined") {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const q = urlParams.get("q");
-        if (q) return q;
-        const stored = sessionStorage.getItem("pending_investigation");
-        if (stored) {
-          const parsed = JSON.parse(stored) as { query?: string };
-          if (parsed.query) return parsed.query;
-        }
-      } catch {
-        // Ignore parsing errors
-      }
-    }
-    return "Investigation Canvas";
-  });
+  // useSyncExternalStore guarantees zero hydration mismatch while synchronizing client storage safely
+  const clientTitle = useSyncExternalStore(
+    emptySubscribe,
+    getClientTitle,
+    getServerTitle
+  );
 
-  const displayTitle = investigationTitle || storedTitle || "Investigation Canvas";
+  const displayTitle = investigationTitle || clientTitle;
 
   return (
     <nav
@@ -84,6 +94,7 @@ export function Breadcrumbs({ investigationTitle, className }: Props) {
           <span
             className="text-foreground font-medium truncate max-w-[140px] sm:max-w-[220px] md:max-w-[340px]"
             title={displayTitle}
+            suppressHydrationWarning
           >
             {displayTitle}
           </span>

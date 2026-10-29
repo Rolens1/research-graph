@@ -31,6 +31,9 @@ export type MockGraphNode = {
   parentNodeId: string | null;
   isUserAdded: boolean;
   isDisputed?: boolean;
+  impactLevel?: "critical" | "high" | "medium" | "low";
+  timestamp?: string;
+  backdropUrl?: string;
   sources: MockSourceCitation[];
 };
 
@@ -95,6 +98,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       depthLevel: 0,
       parentNodeId: null,
       isUserAdded: false,
+      impactLevel: "high",
+      timestamp: "08:42",
+      backdropUrl: "/backdrops/red_sea_chokepoint.jpg",
       sources: [
         {
           id: "src-1",
@@ -115,6 +121,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       depthLevel: 0,
       parentNodeId: null,
       isUserAdded: false,
+      impactLevel: "critical",
+      timestamp: "09:18",
+      backdropUrl: "/backdrops/red_sea_chokepoint.jpg",
       sources: [
         {
           id: "src-2",
@@ -135,6 +144,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       depthLevel: 0,
       parentNodeId: null,
       isUserAdded: false,
+      impactLevel: "high",
+      timestamp: "10:06",
+      backdropUrl: "/backdrops/cape_route_reroute.jpg",
       sources: [
         {
           id: "src-3",
@@ -155,6 +167,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       depthLevel: 1,
       parentNodeId: "decision_bab-el-mandeb-blockade",
       isUserAdded: false,
+      impactLevel: "medium",
+      timestamp: "10:44",
+      backdropUrl: "/backdrops/naval_escort_defense.jpg",
       sources: [
         {
           id: "src-4",
@@ -176,6 +191,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       parentNodeId: null,
       isUserAdded: false,
       isDisputed: true,
+      impactLevel: "high",
+      timestamp: "11:30",
+      backdropUrl: "/backdrops/cape_route_reroute.jpg",
       sources: [
         {
           id: "src-5",
@@ -196,6 +214,9 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       depthLevel: 0,
       parentNodeId: null,
       isUserAdded: false,
+      impactLevel: "high",
+      timestamp: "12:04",
+      backdropUrl: "/backdrops/naval_escort_defense.jpg",
       sources: [
         {
           id: "src-6",

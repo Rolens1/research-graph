@@ -1,7 +1,7 @@
 "use client";
 
 // 1. External imports
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 
 // 2. Internal imports
 import { VoyageTransitionScreen } from "@/components/radar/VoyageTransitionScreen";
@@ -14,44 +14,63 @@ type Props = {
   initialDepth?: "recon" | "expedition";
 };
 
+type PendingData = {
+  query: string;
+  depth: "recon" | "expedition";
+};
+
+const EMPTY_PENDING: PendingData = {
+  query: "",
+  depth: "recon",
+};
+
+let cachedPendingSnapshot: PendingData = EMPTY_PENDING;
+let lastRawPending: string | null = null;
+
+const emptySubscribe = () => () => {};
+
+function getPendingSnapshot(): PendingData {
+  if (typeof window === "undefined") return EMPTY_PENDING;
+  try {
+    const raw = sessionStorage.getItem("pending_investigation");
+    if (raw === lastRawPending) {
+      return cachedPendingSnapshot;
+    }
+    lastRawPending = raw;
+    if (raw) {
+      const parsed = JSON.parse(raw) as { query?: string; depth?: "recon" | "expedition" };
+      cachedPendingSnapshot = {
+        query: parsed.query || "",
+        depth: parsed.depth === "expedition" ? "expedition" : "recon",
+      };
+      return cachedPendingSnapshot;
+    }
+  } catch {
+    // Ignore storage parse error
+  }
+  cachedPendingSnapshot = EMPTY_PENDING;
+  return EMPTY_PENDING;
+}
+
+function getServerPendingSnapshot(): PendingData {
+  return EMPTY_PENDING;
+}
+
 // 4. Component
 export function WorkspaceClient({
   sessionId,
   initialQuery = "",
   initialDepth = "recon",
 }: Props) {
-  const [query] = useState<string>(() => {
-    if (initialQuery) return initialQuery;
-    if (typeof window !== "undefined") {
-      try {
-        const stored = sessionStorage.getItem("pending_investigation");
-        if (stored) {
-          const parsed = JSON.parse(stored) as { query?: string; depth?: "recon" | "expedition" };
-          return parsed.query || "";
-        }
-      } catch {
-        // Ignore JSON or storage errors
-      }
-    }
-    return "";
-  });
+  // Sync client storage without setState cascading renders or hydration mismatch
+  const pendingData = useSyncExternalStore(
+    emptySubscribe,
+    getPendingSnapshot,
+    getServerPendingSnapshot
+  );
 
-  const [depth] = useState<"recon" | "expedition">(() => {
-    if (initialDepth) return initialDepth;
-    if (typeof window !== "undefined") {
-      try {
-        const stored = sessionStorage.getItem("pending_investigation");
-        if (stored) {
-          const parsed = JSON.parse(stored) as { query?: string; depth?: "recon" | "expedition" };
-          if (parsed.depth) return parsed.depth;
-        }
-      } catch {
-        // Ignore JSON or storage errors
-      }
-    }
-    return "recon";
-  });
-
+  const query = initialQuery || pendingData.query || "";
+  const depth = initialDepth || pendingData.depth || "recon";
   const [showTransition, setShowTransition] = useState(true);
 
   // Clean up pending investigation storage once mounted
@@ -59,7 +78,7 @@ export function WorkspaceClient({
     try {
       sessionStorage.removeItem("pending_investigation");
     } catch {
-      // Ignore storage removal errors
+      // Ignore storage errors
     }
   }, []);
 

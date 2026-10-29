@@ -8,6 +8,8 @@ const elk = new ELK();
 
 export const DEFAULT_NODE_WIDTH = 240;
 export const DEFAULT_NODE_HEIGHT = 96;
+export const STAR_NODE_WIDTH = 140;
+export const STAR_NODE_HEIGHT = 90;
 
 export const ELK_OPTIONS: Record<string, string> = {
   "elk.algorithm": "layered",
@@ -20,7 +22,7 @@ export const ELK_OPTIONS: Record<string, string> = {
 
 /**
  * Calculates deterministic left-to-right positions for graph nodes using ELK.
- * Preserves existing node dimensions if measured by React Flow, falling back to 240x96.
+ * Preserves existing node dimensions if measured by React Flow, falling back to 240x96 (or 140x90 for stars).
  */
 export async function calculateElkLayout<T extends Record<string, unknown> = GraphNodeData>(
   nodes: Node<T>[],
@@ -28,11 +30,16 @@ export async function calculateElkLayout<T extends Record<string, unknown> = Gra
 ): Promise<Node<T>[]> {
   if (nodes.length === 0) return [];
 
-  const elkNodes: ElkNode[] = nodes.map((node) => ({
-    id: node.id,
-    width: node.measured?.width ?? node.width ?? DEFAULT_NODE_WIDTH,
-    height: node.measured?.height ?? node.height ?? DEFAULT_NODE_HEIGHT,
-  }));
+  const elkNodes: ElkNode[] = nodes.map((node) => {
+    const isStar = node.type === "constellationStarNode";
+    const defaultW = isStar ? STAR_NODE_WIDTH : DEFAULT_NODE_WIDTH;
+    const defaultH = isStar ? STAR_NODE_HEIGHT : DEFAULT_NODE_HEIGHT;
+    return {
+      id: node.id,
+      width: node.measured?.width ?? node.width ?? defaultW,
+      height: node.measured?.height ?? node.height ?? defaultH,
+    };
+  });
 
   const elkEdges: ElkExtendedEdge[] = edges.map((edge) => ({
     id: edge.id,

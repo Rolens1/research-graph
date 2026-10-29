@@ -2,11 +2,22 @@
 
 // 1. External imports
 import React from "react";
-import { ZoomIn, ZoomOut, Maximize2, Lock, Unlock, LayoutGrid, Loader2 } from "lucide-react";
+import {
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Lock,
+  Unlock,
+  LayoutGrid,
+  Loader2,
+  Sparkles,
+  Layers,
+} from "lucide-react";
 import { useReactFlow, useViewport } from "@xyflow/react";
 
 // 2. Internal imports
 import { cn } from "@/lib/utils";
+import type { CanvasViewMode } from "@/lib/graph-adapter";
 
 // 3. Type definitions
 type Props = {
@@ -14,6 +25,8 @@ type Props = {
   onToggleLock: () => void;
   isRealigning?: boolean;
   onRealignLayout?: () => void;
+  viewMode?: CanvasViewMode;
+  onViewModeChange?: (mode: CanvasViewMode) => void;
   className?: string;
 };
 
@@ -23,6 +36,8 @@ export function CanvasControls({
   onToggleLock,
   isRealigning = false,
   onRealignLayout,
+  viewMode = "constellation",
+  onViewModeChange,
   className,
 }: Props) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
@@ -49,8 +64,51 @@ export function CanvasControls({
         className,
       )}
       role="toolbar"
-      aria-label="Canvas camera controls"
+      aria-label="Canvas camera and view mode controls"
     >
+      {/* View Mode Segmented Switcher */}
+      {onViewModeChange && (
+        <>
+          <div className="flex items-center p-0.5 rounded-lg bg-muted/60 border border-border/60">
+            <button
+              type="button"
+              onClick={() => onViewModeChange("constellation")}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-sans transition-all duration-200 cursor-pointer",
+                viewMode === "constellation"
+                  ? "bg-card text-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Constellation view: celestial star chart"
+              aria-label="Constellation star view"
+              aria-pressed={viewMode === "constellation"}
+            >
+              <Sparkles className="h-3 w-3 text-accent" />
+              <span>Constellation</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onViewModeChange("cards")}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-sans transition-all duration-200 cursor-pointer",
+                viewMode === "cards"
+                  ? "bg-card text-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Cards view: rectangular dossier cards"
+              aria-label="Cards dossier view"
+              aria-pressed={viewMode === "cards"}
+            >
+              <Layers className="h-3 w-3 text-muted-foreground" />
+              <span>Cards</span>
+            </button>
+          </div>
+
+          <div className="h-3.5 w-px bg-border/80 mx-0.5" />
+        </>
+      )}
+
       {/* Zoom In */}
       <button
         type="button"
