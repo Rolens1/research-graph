@@ -8,9 +8,11 @@ import { GitBranch } from "lucide-react";
 // 2. Internal imports
 import { LandingHeader } from "@/components/search/LandingHeader";
 import { SearchHelm, type SearchDepth } from "@/components/search/SearchHelm";
+import { IntakeMessenger } from "@/components/search/IntakeMessenger";
 import { PromptSeeds } from "@/components/search/PromptSeeds";
 import { LandingFooter } from "@/components/search/LandingFooter";
 import { useAuth } from "@/hooks/useAuth";
+import type { IntakeMessage } from "@/types/intake";
 
 // 3. Type definitions (none required beyond SearchDepth)
 
@@ -21,28 +23,40 @@ export function HomePage() {
   const [query, setQuery] = useState("");
   const [depth, setDepth] = useState<SearchDepth>("recon");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isIntakeActive, setIsIntakeActive] = useState(false);
 
   const handleSelectSeed = (seedPrompt: string) => {
     setQuery(seedPrompt);
   };
 
-  const handleSearch = () => {
+  const handleOpenIntake = () => {
     const trimmed = query.trim();
     if (!trimmed || isSubmitting) return;
+    setIsIntakeActive(true);
+  };
 
+  const handleConfirmLaunch = (refinedQuery: string, intakeHistory: IntakeMessage[]) => {
     setIsSubmitting(true);
     const sessionId = crypto.randomUUID();
-    const targetUrl = `/workspace/${sessionId}?q=${encodeURIComponent(trimmed)}&depth=${depth}`;
+    const finalQuery = refinedQuery.trim() || query.trim();
+    const targetUrl = `/workspace/${sessionId}?q=${encodeURIComponent(finalQuery)}&depth=${depth}`;
+
+    try {
+      sessionStorage.setItem(
+        "pending_investigation",
+        JSON.stringify({
+          query: finalQuery,
+          originalQuery: query.trim(),
+          depth,
+          sessionId,
+          intakeHistory,
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to store pending investigation:", err);
+    }
 
     if (!user) {
-      try {
-        sessionStorage.setItem(
-          "pending_investigation",
-          JSON.stringify({ query: trimmed, depth, sessionId })
-        );
-      } catch (err) {
-        console.error("Failed to store pending investigation:", err);
-      }
       router.push(`/login?redirectTo=${encodeURIComponent(targetUrl)}`);
       return;
     }
@@ -71,18 +85,28 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Floating Search Bar (matching landing-idea.png) */}
-        <SearchHelm
-          query={query}
-          onQueryChange={setQuery}
-          depth={depth}
-          onDepthChange={setDepth}
-          onSubmit={handleSearch}
-          isSubmitting={isSubmitting}
-        />
+        {/* Center Card: Morphing between SearchHelm and IntakeMessenger */}
+        {isIntakeActive ? (
+          <IntakeMessenger
+            initialQuery={query}
+            depth={depth}
+            onConfirmLaunch={handleConfirmLaunch}
+            onCancel={() => setIsIntakeActive(false)}
+          />
+        ) : (
+          <>
+            <SearchHelm
+              query={query}
+              onQueryChange={setQuery}
+              depth={depth}
+              onDepthChange={setDepth}
+              onSubmit={handleOpenIntake}
+              isSubmitting={isSubmitting}
+            />
 
-        {/* Clean Suggestions Card (matching landing-idea.png) */}
-        <PromptSeeds onSelectSeed={handleSelectSeed} />
+            <PromptSeeds onSelectSeed={handleSelectSeed} />
+          </>
+        )}
       </div>
 
       <LandingFooter />

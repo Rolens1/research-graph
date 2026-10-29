@@ -5,7 +5,7 @@ import {
   readerInputSchema,
   readerOutputSchema,
 } from "@/types/reader";
-import { searchTavily } from "@/lib/tavily";
+import { searchWeb } from "@/lib/search-provider";
 import {
   identifyRabbitHoleLeads,
   deduplicateCandidateEntities,
@@ -83,13 +83,13 @@ export async function executeReaderInvestigation(
     effectiveSearchSignal = controller.signal;
   }
 
-  // 3. Dispatch Parallel Tavily Searches
+  // 3. Dispatch Parallel Web Searches with Resilient Fallback
   reasoningSteps.push(
-    `Dispatching ${subQueries.length} concurrent web queries via Tavily (advanced mode, 10s deadline).`,
+    `Dispatching ${subQueries.length} concurrent web queries via distributed search engine (10s deadline).`,
   );
 
   const searchPromises = subQueries.map(async (sq) => {
-    const results = await searchTavily(sq.query, {
+    const { results } = await searchWeb(sq.query, {
       depth: "advanced",
       maxResults: 4,
       includeRawContent: includeFullContent,

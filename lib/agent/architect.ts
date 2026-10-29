@@ -319,7 +319,7 @@ TASK:
         const validated = architectPlanOutputSchema.parse(rawParsed);
         return validated;
       },
-      { preferredProvider },
+      { preferredProvider, role: "architect" },
     );
 
     return result;

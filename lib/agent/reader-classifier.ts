@@ -147,7 +147,7 @@ Extract the top candidate entities (max 6) and core factual statements (max 5) w
         const parsed = classificationOutputSchema.parse(rawParsed);
         return parsed;
       },
-      { preferredProvider: options?.preferredProvider },
+      { preferredProvider: options?.preferredProvider, role: "reader" },
     );
 
     // Post-process entities: clamp to 6 (AC-4), fallback date/quote heuristics if missing
