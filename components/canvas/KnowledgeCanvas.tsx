@@ -55,6 +55,7 @@ type Props = {
   onSelectNode?: (nodeId: string) => void;
   viewMode?: CanvasViewMode;
   onViewModeChange?: (mode: CanvasViewMode) => void;
+  isStreamCompleted?: boolean;
   className?: string;
 };
 
@@ -66,11 +67,19 @@ function KnowledgeCanvasContent({
   onSelectNode,
   viewMode: propViewMode,
   onViewModeChange,
+  isStreamCompleted,
   className,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const [isLocked, setIsLocked] = useState(false);
   const [isRealigning, setIsRealigning] = useState(false);
+
+  // Trigger smooth cinematic fitView animation upon stream completion (AC-5)
+  useEffect(() => {
+    if (isStreamCompleted) {
+      fitView({ duration: 800, padding: 0.2 });
+    }
+  }, [isStreamCompleted, fitView]);
 
   // Manage view mode with localStorage persistence, defaulting to constellation
   const [internalViewMode, setInternalViewMode] = useState<CanvasViewMode>(() => {

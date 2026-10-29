@@ -2,6 +2,7 @@
 
 // 1. External imports
 import React, { useState } from "react";
+import { RefreshCw, WifiOff } from "lucide-react";
 
 // 2. Internal imports
 import { cn } from "@/lib/utils";
@@ -11,6 +12,8 @@ import { KnowledgeCanvas } from "@/components/canvas/KnowledgeCanvas";
 import { LiveTerminal } from "@/components/telemetry/LiveTerminal";
 import { ChronoTimelinePlaceholder } from "./ChronoTimelinePlaceholder";
 import { InvestigationPlaybackProvider } from "@/components/telemetry/InvestigationPlaybackContext";
+import { useInvestigationStream } from "@/hooks/useInvestigationStream";
+import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
 
 // 3. Type definitions
 type Props = {
@@ -20,7 +23,18 @@ type Props = {
   className?: string;
 };
 
-// 4. Component
+// 4. Pure helper functions
+function resolveHeaderStatus(
+  streamStatus: InvestigationStreamStatus,
+  fallback: "running" | "completed" | "failed",
+): "running" | "completed" | "failed" {
+  if (streamStatus === "streaming" || streamStatus === "connecting") return "running";
+  if (streamStatus === "completed") return "completed";
+  if (streamStatus === "error") return "failed";
+  return fallback;
+}
+
+// 5. Component
 export function InvestigationShell({
   sessionId,
   query,
@@ -31,19 +45,29 @@ export function InvestigationShell({
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
   const [isTimelineOpen, setIsTimelineOpen] = useState(true);
 
-  // Active selections
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
-    MOCK_INVESTIGATION.nodes[0]?.id || null,
-  );
+  // Live investigation stream connection (AC-1, AC-6, AC-7)
+  const stream = useInvestigationStream({
+    researchId: sessionId,
+    initialNodes: MOCK_INVESTIGATION.nodes,
+    initialEdges: MOCK_INVESTIGATION.edges,
+    initialLogs: MOCK_INVESTIGATION.telemetry,
+    initialTimeline: MOCK_INVESTIGATION.timeline,
+    initialConfidence: MOCK_INVESTIGATION.confidenceScore,
+  });
+
+  // Active selections (derived fallback avoids cascading render effects)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
+  const effectiveSelectedNodeId =
+    selectedNodeId || stream.nodes[0]?.id || MOCK_INVESTIGATION.nodes[0]?.id || null;
+
   const displayQuery = query || MOCK_INVESTIGATION.query;
-  const confidenceScore = MOCK_INVESTIGATION.confidenceScore;
-  const status = MOCK_INVESTIGATION.status;
+  const headerStatus = resolveHeaderStatus(stream.status, MOCK_INVESTIGATION.status);
 
   const handleSelectEvent = (eventId: string) => {
     setSelectedEventId(eventId);
-    const event = MOCK_INVESTIGATION.timeline.find((e) => e.id === eventId);
+    const event = stream.timelineEvents.find((e) => e.id === eventId);
     if (event?.nodeId) {
       setSelectedNodeId(event.nodeId);
     }
@@ -62,8 +86,8 @@ export function InvestigationShell({
           sessionId={sessionId}
           query={displayQuery}
           depth={depth}
-          confidenceScore={confidenceScore}
-          status={status}
+          confidenceScore={stream.confidenceScore}
+          status={headerStatus}
           isTerminalOpen={isTerminalOpen}
           onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
           isTimelineOpen={isTimelineOpen}
@@ -74,15 +98,34 @@ export function InvestigationShell({
         <div className="flex-1 flex overflow-hidden w-full relative">
           {/* Zone 1: The Causal Canvas */}
           <KnowledgeCanvas
-            nodes={MOCK_INVESTIGATION.nodes}
-            edges={MOCK_INVESTIGATION.edges}
-            selectedNodeId={selectedNodeId}
+            nodes={stream.nodes}
+            edges={stream.edges}
+            isStreamCompleted={stream.status === "completed"}
+            selectedNodeId={effectiveSelectedNodeId}
             onSelectNode={setSelectedNodeId}
           />
 
+          {/* Stale Connection & Retry Indicator (AC-7) */}
+          {stream.isStale && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 border border-amber-500/40 shadow-xl backdrop-blur-md">
+              <WifiOff className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-mono text-muted-foreground">
+                Stream disconnected. Showing {stream.nodes.length} cached nodes.
+              </span>
+              <button
+                type="button"
+                onClick={stream.reconnect}
+                className="text-xs font-mono text-primary hover:underline flex items-center gap-1.5 cursor-pointer font-medium ml-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Resume Stream
+              </button>
+            </div>
+          )}
+
           {/* Zone 2: Live Agent Terminal */}
           <LiveTerminal
-            logs={MOCK_INVESTIGATION.telemetry}
+            logs={stream.telemetryLogs}
             isOpen={isTerminalOpen}
             onToggle={() => setIsTerminalOpen(!isTerminalOpen)}
           />
@@ -90,7 +133,7 @@ export function InvestigationShell({
 
         {/* 3. Bottom Strip: Zone 3 Chrono Timeline (112px or 36px) */}
         <ChronoTimelinePlaceholder
-          events={MOCK_INVESTIGATION.timeline}
+          events={stream.timelineEvents}
           isOpen={isTimelineOpen}
           onToggle={() => setIsTimelineOpen(!isTimelineOpen)}
           selectedEventId={selectedEventId}
