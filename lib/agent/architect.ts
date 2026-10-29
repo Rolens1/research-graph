@@ -296,23 +296,31 @@ TASK:
         });
 
         // Defensively strip markdown code fences and whitespace
-        const cleanJson = text
+        let cleanJson = text
           .replace(/^```json\s*/i, "")
           .replace(/^```\s*/i, "")
           .replace(/\s*```$/i, "")
           .trim();
 
+        // If conversational text wraps the JSON, extract the JSON object bounded by braces
+        const firstBrace = cleanJson.indexOf("{");
+        const lastBrace = cleanJson.lastIndexOf("}");
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          cleanJson = cleanJson.slice(firstBrace, lastBrace + 1);
+        }
+
         const rawParsed = JSON.parse(cleanJson);
+
+        // Pre-clamp subQueries to 2 before schema validation to prevent .max(2) rejection
+        if (rawParsed && Array.isArray(rawParsed.subQueries) && rawParsed.subQueries.length > 2) {
+          rawParsed.subQueries = rawParsed.subQueries.slice(0, 2);
+        }
+
         const validated = architectPlanOutputSchema.parse(rawParsed);
         return validated;
       },
       { preferredProvider },
     );
-
-    // Enforce strictly 2 sub-queries maximum (AC-1)
-    if (result.subQueries.length > 2) {
-      result.subQueries = result.subQueries.slice(0, 2);
-    }
 
     return result;
   } catch (error: unknown) {
