@@ -1,6 +1,7 @@
 // Mock Investigation Fixture grounded in Zod schemas from context/schemas-and-contracts.md
+import type { PathwayRole, FieldAmbiguity } from "@/types/graph";
 
-export type EntityType = "actor" | "event" | "technology" | "decision" | "dispute";
+export type EntityType = "actor" | "event" | "technology" | "decision" | "dispute" | "enigma";
 export type RelationType = "causes" | "blocks" | "finances" | "contradicts" | "leads_to";
 export type AgentName = "The Architect" | "The Reader" | "The Fact Checker" | "The Visualizer";
 export type TelemetryActionType =
@@ -34,6 +35,9 @@ export type MockGraphNode = {
   impactLevel?: "critical" | "high" | "medium" | "low";
   timestamp?: string;
   backdropUrl?: string;
+  pathwayRole?: PathwayRole;
+  ambiguities?: FieldAmbiguity[];
+  unresolvedQuestion?: string;
   sources: MockSourceCitation[];
 };
 

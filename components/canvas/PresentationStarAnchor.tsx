@@ -73,6 +73,14 @@ function resolveStarTheme(
         ringColor: "rgba(5, 150, 105, 0.18)",
         badgeLabel: "Technology Signal",
       };
+    case "enigma":
+      return {
+        starColor: "var(--color-entity-enigma)",
+        glowColor: "rgba(168, 85, 247, 0.9)",
+        coronaColor: "rgba(168, 85, 247, 0.45)",
+        ringColor: "rgba(168, 85, 247, 0.22)",
+        badgeLabel: "Unresolved Enigma",
+      };
     case "actor":
     default:
       return {

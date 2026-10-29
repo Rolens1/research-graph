@@ -78,6 +78,13 @@ function resolveStarTheme(
         coronaColor: "rgba(5, 150, 105, 0.3)",
         badgeLabel: "Technology",
       };
+    case "enigma":
+      return {
+        starColor: "var(--color-entity-enigma)",
+        glowColor: "rgba(168, 85, 247, 0.85)",
+        coronaColor: "rgba(168, 85, 247, 0.4)",
+        badgeLabel: "Unresolved Enigma",
+      };
     case "actor":
     default:
       return {

@@ -16,6 +16,8 @@ import {
   Cpu,
   Scale,
   AlertCircle,
+  HelpCircle,
+  GitBranch,
 } from "lucide-react";
 
 // 2. Internal imports
@@ -31,6 +33,7 @@ const entityBadgeStyles: Record<EntityType, string> = {
   technology: "bg-entity-technology-bg text-entity-technology-foreground border-entity-technology",
   decision: "bg-entity-decision-bg text-entity-decision-foreground border-entity-decision",
   dispute: "bg-entity-dispute-bg text-entity-dispute-foreground border-entity-dispute",
+  enigma: "bg-entity-enigma-bg text-entity-enigma-foreground border-entity-enigma",
 };
 
 const entityIcons: Record<EntityType, React.ElementType> = {
@@ -39,6 +42,7 @@ const entityIcons: Record<EntityType, React.ElementType> = {
   technology: Cpu,
   decision: Scale,
   dispute: AlertTriangle,
+  enigma: HelpCircle,
 };
 
 const handleBaseClass =
@@ -46,6 +50,7 @@ const handleBaseClass =
 
 // 4. Component
 function CustomEntityNodeComponent({ data, selected }: Props) {
+  const isEnigma = data.entityType === "enigma" || Boolean(data.unresolvedQuestion);
   const isHighConfidence = data.confidence >= 85;
   const isDisputed = Boolean(data.isDisputed || data.entityType === "dispute");
   const sourceCount = data.sources?.length ?? 0;
@@ -55,10 +60,15 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
   return (
     <div
       className={cn(
-        "w-[240px] min-h-[96px] rounded-xl border bg-card p-3 shadow-xs transition-all relative flex flex-col justify-between space-y-2 select-none group",
+        "w-[250px] min-h-[96px] rounded-xl border bg-card p-3 shadow-xs transition-all relative flex flex-col justify-between space-y-2 select-none group",
+        isEnigma && "border-dashed border-entity-enigma/70 bg-entity-enigma-bg/15 shadow-sm",
         selected
-          ? "border-primary ring-2 ring-primary/30 shadow-glass"
-          : "border-border/80 hover:border-accent/60 hover:shadow-xs",
+          ? isEnigma
+            ? "border-entity-enigma ring-2 ring-entity-enigma/40 shadow-glass"
+            : "border-primary ring-2 ring-primary/30 shadow-glass"
+          : isEnigma
+            ? "hover:border-entity-enigma hover:shadow-md"
+            : "border-border/80 hover:border-accent/60 hover:shadow-xs",
       )}
       role="article"
       aria-label={`${data.entityType} node: ${data.label}`}
@@ -143,7 +153,7 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
       </div>
 
       {/* Label and Summary Preview */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <h4
           className="text-xs font-bold text-foreground font-sans line-clamp-1 group-hover:text-primary transition-colors leading-snug"
           title={data.label}
@@ -153,9 +163,22 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
         <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
           {data.summary}
         </p>
+
+        {/* Unresolved Mystery Question Card Section */}
+        {data.unresolvedQuestion && (
+          <div className="rounded-lg bg-entity-enigma-bg/60 border border-entity-enigma/40 p-2 text-[10px] space-y-1 mt-1 animate-in fade-in-0">
+            <div className="flex items-center gap-1 text-[9px] font-mono font-bold uppercase tracking-wider text-entity-enigma-foreground">
+              <HelpCircle className="h-3 w-3 shrink-0" />
+              <span>Unresolved Question</span>
+            </div>
+            <p className="text-[11px] text-foreground font-semibold leading-snug line-clamp-3">
+              {data.unresolvedQuestion}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Footer: Verified Sources Count and Optional Depth Tag */}
+      {/* Footer: Verified Sources Count, Pathway Role, and Optional Depth Tag */}
       <div className="flex items-center justify-between pt-1.5 border-t border-border/40 text-[10px] font-mono text-muted-foreground">
         <span className="inline-flex items-center gap-1">
           <ShieldCheck className="h-3 w-3 text-entity-technology" />
@@ -164,11 +187,30 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
           </span>
         </span>
 
-        {data.depthLevel > 0 && (
-          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80">
-            Depth {data.depthLevel}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {data.pathwayRole === "divergent_branch" && (
+            <span
+              className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[8px] font-mono font-medium bg-accent/15 text-accent border border-accent/30"
+              title="Rabbit hole divergent exploration branch"
+            >
+              <GitBranch className="h-2 w-2" />
+              <span>Branch</span>
+            </span>
+          )}
+          {data.pathwayRole === "dead_end" && (
+            <span
+              className="px-1 py-0.2 rounded text-[8px] font-mono font-medium bg-muted text-muted-foreground border border-border"
+              title="Explored lead that reached an investigative dead end"
+            >
+              Dead End
+            </span>
+          )}
+          {data.depthLevel > 0 && (
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80">
+              Depth {data.depthLevel}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

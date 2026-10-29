@@ -76,6 +76,9 @@ export function adaptMockToReactFlow(
         impactLevel,
         timestamp: node.timestamp ?? "00:00",
         backdropUrl: node.backdropUrl,
+        pathwayRole: node.pathwayRole ?? "core_causal",
+        ambiguities: node.ambiguities,
+        unresolvedQuestion: node.unresolvedQuestion,
         sources: node.sources,
       },
     };

@@ -27,6 +27,8 @@ const proceduralBackdropGradients: Record<EntityType, string> = {
     "radial-gradient(ellipse at 40% 40%, rgba(139, 92, 246, 0.15) 0%, rgba(15, 23, 42, 0.9) 60%, rgba(3, 7, 18, 0.98) 100%)",
   dispute:
     "radial-gradient(ellipse at 40% 40%, rgba(244, 63, 94, 0.16) 0%, rgba(15, 23, 42, 0.9) 60%, rgba(3, 7, 18, 0.98) 100%)",
+  enigma:
+    "radial-gradient(ellipse at 40% 40%, rgba(168, 85, 247, 0.22) 0%, rgba(245, 158, 11, 0.08) 35%, rgba(15, 23, 42, 0.92) 65%, rgba(3, 7, 18, 0.98) 100%)",
 };
 
 // 4. Component

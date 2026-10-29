@@ -15,6 +15,8 @@ import {
   Flame,
   Radio,
   Sparkles,
+  HelpCircle,
+  GitBranch,
 } from "lucide-react";
 
 // 2. Internal imports
@@ -36,6 +38,7 @@ const entityBadgeStyles: Record<EntityType, string> = {
   technology: "bg-entity-technology-bg text-entity-technology-foreground border-entity-technology",
   decision: "bg-entity-decision-bg text-entity-decision-foreground border-entity-decision",
   dispute: "bg-entity-dispute-bg text-entity-dispute-foreground border-entity-dispute",
+  enigma: "bg-entity-enigma-bg text-entity-enigma-foreground border-entity-enigma",
 };
 
 const entityIcons: Record<EntityType, React.ElementType> = {
@@ -44,6 +47,7 @@ const entityIcons: Record<EntityType, React.ElementType> = {
   technology: Cpu,
   decision: Scale,
   dispute: AlertTriangle,
+  enigma: HelpCircle,
 };
 
 type ImpactBadgeConfig = {
@@ -219,6 +223,25 @@ function SelectedNodeInspectorComponent({
             <span>{node.confidence}% confidence</span>
           </span>
 
+          {node.pathwayRole === "divergent_branch" && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-accent/15 text-accent border border-accent/30"
+              title="Rabbit hole divergent exploration branch"
+            >
+              <GitBranch className="h-2.5 w-2.5" />
+              <span>Rabbit Hole Branch</span>
+            </span>
+          )}
+
+          {node.pathwayRole === "dead_end" && (
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-muted text-muted-foreground border border-border"
+              title="Explored lead that reached an investigative dead end"
+            >
+              <span>Dead End</span>
+            </span>
+          )}
+
           {sourceCount > 0 && (
             <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
               <ShieldCheck className="h-3 w-3 text-muted-foreground/80" />
@@ -231,6 +254,44 @@ function SelectedNodeInspectorComponent({
         <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 pt-1 font-sans">
           {node.summary}
         </p>
+
+        {/* Unresolved Mystery Question Card Section */}
+        {node.unresolvedQuestion && (
+          <div className="rounded-xl border border-entity-enigma/50 bg-entity-enigma-bg/40 p-3 space-y-1 my-2 shadow-xs">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-entity-enigma-foreground">
+              <HelpCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>Unresolved Investigation Question</span>
+            </div>
+            <p className="text-xs text-foreground font-semibold leading-relaxed font-sans">
+              {node.unresolvedQuestion}
+            </p>
+          </div>
+        )}
+
+        {/* Granular Field-Level Ambiguities Callout */}
+        {node.ambiguities && node.ambiguities.length > 0 && (
+          <div className="rounded-xl border border-warning/30 bg-warning/5 p-2.5 space-y-1.5 my-2">
+            <div className="flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase tracking-wider text-warning">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              <span>Granular Ambiguities ({node.ambiguities.length})</span>
+            </div>
+            <div className="space-y-1">
+              {node.ambiguities.map((amb, i) => (
+                <div key={i} className="text-[10px] font-mono text-muted-foreground border-l-2 border-warning/40 pl-2">
+                  <span className="font-semibold text-foreground uppercase text-[9px]">{amb.field}: </span>
+                  <span className="text-foreground/90">
+                    {amb.candidates.map((c) => `"${c.value}" (${c.source})`).join(" vs ")}
+                  </span>
+                  {amb.reason && (
+                    <p className="text-[9px] text-muted-foreground/80 italic font-sans pt-0.5">
+                      {amb.reason}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer Actions */}

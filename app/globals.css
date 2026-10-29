@@ -46,6 +46,10 @@
   --entity-dispute-foreground: #b91c1c;
   --entity-dispute-bg: rgba(220, 38, 38, 0.08);
 
+  --entity-enigma: #7c3aed;
+  --entity-enigma-foreground: #6d28d9;
+  --entity-enigma-bg: rgba(124, 58, 237, 0.08);
+
   /* Multi-Agent Roles */
   --agent-architect: #2563eb;
   --agent-reader: #0284c7;
@@ -99,6 +103,10 @@
   --entity-dispute-foreground: #fecaca;
   --entity-dispute-bg: rgba(248, 113, 113, 0.12);
 
+  --entity-enigma: #c084fc;
+  --entity-enigma-foreground: #f3e8ff;
+  --entity-enigma-bg: rgba(192, 132, 252, 0.14);
+
   /* Multi-Agent Roles */
   --agent-architect: #3b82f6;
   --agent-reader: #38bdf8;
@@ -149,6 +157,10 @@
   --color-entity-dispute: var(--entity-dispute);
   --color-entity-dispute-foreground: var(--entity-dispute-foreground);
   --color-entity-dispute-bg: var(--entity-dispute-bg);
+
+  --color-entity-enigma: var(--entity-enigma);
+  --color-entity-enigma-foreground: var(--entity-enigma-foreground);
+  --color-entity-enigma-bg: var(--entity-enigma-bg);
 
   --color-agent-architect: var(--agent-architect);
   --color-agent-reader: var(--agent-reader);

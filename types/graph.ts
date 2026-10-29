@@ -9,6 +9,7 @@ export const entityTypeSchema = z.enum([
   "technology", // Hardware, protocols, patents, batteries, algorithms
   "decision", // Policies, treaties, tariffs, strategic pivots
   "dispute", // Active controversies, contested claims, divergent data
+  "enigma", // Unresolved question / mystery node when 4 divergent pathways fail to bridge a causal gap
 ]);
 export type EntityType = z.infer<typeof entityTypeSchema>;
 
@@ -23,6 +24,32 @@ export const relationTypeSchema = z.enum([
   "leads_to", // Sequential or indirect influence ("Inflation -> Public Backlash")
 ]);
 export type RelationType = z.infer<typeof relationTypeSchema>;
+
+/**
+ * Pathway Role in the Investigation Topology
+ */
+export const pathwayRoleSchema = z.enum([
+  "core_causal", // Direct unbroken causal chain from genesis to outcome
+  "divergent_branch", // Rabbit hole that branched into a secondary inquiry or side topic
+  "dead_end", // Investigated pathway that was ruled out or hit a wall
+]);
+export type PathwayRole = z.infer<typeof pathwayRoleSchema>;
+
+/**
+ * Granular Field-Level Ambiguity Schema (e.g. conflicting dates or names without breaking node validity)
+ */
+export const fieldAmbiguitySchema = z.object({
+  field: z.string().min(1), // e.g. "event_date", "individual_name", "settlement_amount"
+  candidates: z.array(
+    z.object({
+      value: z.string().min(1),
+      source: z.string().min(1),
+      url: z.string().url().optional(),
+    })
+  ).min(2),
+  reason: z.string().optional(), // e.g. "Court record sealed; news journals report conflicting dates"
+});
+export type FieldAmbiguity = z.infer<typeof fieldAmbiguitySchema>;
 
 /**
  * Individual Verified Source Citation
@@ -59,6 +86,9 @@ export const graphNodeDataSchema = z.object({
   impactLevel: impactLevelSchema.optional(),
   timestamp: z.string().optional(),
   backdropUrl: z.string().optional(),
+  pathwayRole: pathwayRoleSchema.optional(),
+  ambiguities: z.array(fieldAmbiguitySchema).optional(),
+  unresolvedQuestion: z.string().optional(), // Filled when entityType === "enigma"
   sources: z.array(sourceCitationSchema).min(1, "Every node must have at least one source"),
 });
 export type GraphNodeData = z.infer<typeof graphNodeDataSchema>;

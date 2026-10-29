@@ -2,7 +2,7 @@
 
 // 1. External imports
 import React, { memo } from "react";
-import { Users, Calendar, Cpu, Scale, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Users, Calendar, Cpu, Scale, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react";
 
 // 2. Internal imports
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const entityBadgeStyles: Record<EntityType, string> = {
   technology: "bg-entity-technology-bg text-entity-technology-foreground border-entity-technology",
   decision: "bg-entity-decision-bg text-entity-decision-foreground border-entity-decision",
   dispute: "bg-entity-dispute-bg text-entity-dispute-foreground border-entity-dispute",
+  enigma: "bg-entity-enigma-bg text-entity-enigma-foreground border-entity-enigma",
 };
 
 const entityIcons: Record<EntityType, React.ElementType> = {
@@ -28,6 +29,7 @@ const entityIcons: Record<EntityType, React.ElementType> = {
   technology: Cpu,
   decision: Scale,
   dispute: AlertTriangle,
+  enigma: HelpCircle,
 };
 
 // 4. Component
@@ -73,6 +75,19 @@ function PresentationTopOverviewComponent({ node, className }: Props) {
       <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground font-sans leading-tight">
         {node.label}
       </h2>
+
+      {/* Unresolved Question Banner for Enigma Nodes */}
+      {node.unresolvedQuestion && (
+        <div className="rounded-xl border border-entity-enigma/50 bg-entity-enigma-bg/40 p-4 space-y-1.5 shadow-xs">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-entity-enigma-foreground">
+            <HelpCircle className="h-4 w-4 shrink-0" />
+            <span>Unresolved Investigation Question</span>
+          </div>
+          <p className="text-sm sm:text-base text-foreground font-medium leading-relaxed font-sans">
+            {node.unresolvedQuestion}
+          </p>
+        </div>
+      )}
 
       {/* Executive Broad Narrative Summary */}
       <div className="relative pl-4 border-l-2 border-accent/60">
