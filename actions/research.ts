@@ -24,9 +24,11 @@ export async function createResearchSessionAction(input: unknown): Promise<{
       };
     }
 
-    const { query } = parseResult.data;
+    const { query, depth = "recon" } = parseResult.data;
     const insforge = await getInsForgeServerClient();
     const { data: authData } = await insforge.auth.getCurrentUser();
+
+    let researchId: string;
 
     if (authData?.user) {
       const { data, error } = await insforge.database
@@ -45,12 +47,23 @@ export async function createResearchSessionAction(input: unknown): Promise<{
         return { success: false, error: error.message };
       }
 
-      return { success: true, researchId: data.id };
+      researchId = data.id;
+    } else {
+      // Guest / unauthenticated fallback session identifier
+      researchId = "guest_" + Math.random().toString(36).substring(2, 10);
     }
 
-    // Guest / unauthenticated fallback session identifier
-    const guestSessionId = "guest_" + Math.random().toString(36).substring(2, 10);
-    return { success: true, researchId: guestSessionId };
+    // Launch multi-agent research loop in the coordinator asynchronously
+    const { startResearchExecution } = await import("@/lib/agent/stream-coordinator");
+    await startResearchExecution({
+      researchId,
+      query,
+      depth,
+      maxIterations: depth === "expedition" ? 3 : 1,
+      maxQueriesBudget: 12,
+    });
+
+    return { success: true, researchId };
   } catch (err) {
     console.error("[actions/research:createResearchSessionAction]", err);
     return {

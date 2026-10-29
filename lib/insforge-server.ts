@@ -11,7 +11,15 @@ const insforgeAnonKey = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || "";
  * Reads the session cookie asynchronously using Next.js headers.
  */
 export async function getInsForgeServerClient(): Promise<InsForgeClient> {
-  const cookieStore = await cookies();
+  let cookieStore;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    // Outside request store context (e.g. tests or background jobs)
+    cookieStore = {
+      get: () => undefined,
+    };
+  }
   return createServerClient({
     baseUrl: insforgeUrl,
     anonKey: insforgeAnonKey || undefined,
