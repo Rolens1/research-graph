@@ -15,6 +15,7 @@ import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
 import { NodeInspectorHeader } from "./NodeInspectorHeader";
 import { NodeCausalConnections } from "./NodeCausalConnections";
 import { SourceSnippetList } from "./SourceSnippetList";
+import { NodeSpecificChat } from "@/components/chat/NodeSpecificChat";
 
 // 3. Type definitions
 type Props = {
@@ -168,6 +169,11 @@ function NodeInspectorDrawerComponent({
           {/* Feature 26: Verifiable Source Citations */}
           <div className="pt-2 border-t border-border/60">
             <SourceSnippetList sources={node.sources} />
+          </div>
+
+          {/* Feature 27: Node-Scoped Contextual Chat */}
+          <div className="pt-2 border-t border-border/60">
+            <NodeSpecificChat node={node} />
           </div>
         </div>
       )}

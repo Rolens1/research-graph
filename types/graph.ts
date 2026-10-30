@@ -55,7 +55,7 @@ export type FieldAmbiguity = z.infer<typeof fieldAmbiguitySchema>;
  * Individual Verified Source Citation
  */
 export const sourceCitationSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().optional(),
   url: z.string().url(),
   title: z.string().min(1),
   publishedDate: z.string().optional(),
