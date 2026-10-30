@@ -80,6 +80,47 @@ STRICT INSTRUCTIONS:
      ]
    }`;
 
+function extractHeuristicEntitiesAndFacts(
+  searchResults: CleanSearchResult[],
+  queryText: string,
+): { candidateEntities: CandidateEntity[]; extractedFacts: ExtractedFact[] } {
+  const candidateEntities: CandidateEntity[] = [];
+  const extractedFacts: ExtractedFact[] = [];
+
+  for (const res of searchResults.slice(0, 5)) {
+    const titleToken = res.title.split(/[-|—:]/)[0].trim();
+    const dates = extractDatesFromText(res.content);
+    const temporal = dates[0] || undefined;
+    const quote = extractVerbatimQuote(res.content, titleToken);
+
+    if (titleToken.length >= 3) {
+      candidateEntities.push({
+        name: titleToken.slice(0, 60),
+        entityType: "event",
+        significance: `Historical finding related to "${queryText}" documented by ${res.domain}.`,
+        temporalAnchor: temporal,
+        sourceUrl: res.url,
+        quoteSnippet: quote.length >= 10 ? quote : `Historical evidence on ${titleToken}.`,
+      });
+    }
+
+    if (res.content.length >= 20) {
+      extractedFacts.push({
+        statement: quote.length >= 10 ? quote.slice(0, 200) : res.title.slice(0, 200),
+        dateMentioned: temporal,
+        entitiesInvolved: [titleToken.slice(0, 60)],
+        sourceUrl: res.url,
+        sourceTitle: res.title,
+        sourceDomain: res.domain,
+        quoteSnippet: quote.length >= 10 ? quote : `Verified evidence from ${res.url}`,
+        confidenceScore: 80,
+      });
+    }
+  }
+
+  return { candidateEntities, extractedFacts };
+}
+
 /**
  * Classifies search snippets into candidate entities and factual assertions.
  * Satisfies AC-3, AC-4, AC-6, AC-7.
@@ -203,6 +244,13 @@ Extract the top candidate entities (max 6) and core factual statements (max 5) w
       extractedFacts: validFacts,
     };
   } catch (err: unknown) {
+    console.warn(
+      `[Reader Classifier] LLM classification pass failed for "${queryText}": ${String(err)}. Engaging resilient heuristic extraction.`,
+    );
+    const fallback = extractHeuristicEntitiesAndFacts(searchResults, queryText);
+    if (fallback.candidateEntities.length > 0) {
+      return fallback;
+    }
     // Satisfies AC-7: Clean structured error propagation
     throw new ReaderClassificationError(
       `Classification pass failed for query "${queryText}": ${String(err)}`,

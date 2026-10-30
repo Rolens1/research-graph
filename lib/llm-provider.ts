@@ -29,12 +29,12 @@ export type LlmProviderInfo = {
  * - visualizer (Impact & Narrative): Gemini Flash primary, Groq & SambaNova fallback.
  */
 const ROLE_PRIORITY_MAP: Record<AgentTaskRole, LlmProviderType[]> = {
-  architect: ["groq", "gemini", "sambanova", "openrouter", "cerebras", "mistral", "github_models", "openai"],
-  reader: ["gemini", "openrouter", "sambanova", "groq", "cerebras", "mistral", "github_models", "openai"],
-  fact_checker: ["sambanova", "gemini", "groq", "openrouter", "cerebras", "mistral", "github_models", "openai"],
-  visualizer: ["gemini", "groq", "sambanova", "openrouter", "cerebras", "mistral", "github_models", "openai"],
-  intake: ["groq", "gemini", "sambanova", "openrouter", "cerebras", "mistral", "github_models", "openai"],
-  general: ["groq", "gemini", "cerebras", "openrouter", "sambanova", "mistral", "github_models", "openai"],
+  architect: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
+  reader: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
+  fact_checker: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
+  visualizer: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
+  intake: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
+  general: ["gemini", "groq", "openrouter", "sambanova", "cerebras", "mistral", "github_models", "openai"],
 };
 
 function getProviderDefinitions(): Record<
@@ -48,13 +48,6 @@ function getProviderDefinitions(): Record<
   }
 > {
   return {
-    groq: {
-      name: "Groq Cloud (High Speed Lead Reasoning)",
-      modelName: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-      baseURL: "https://api.groq.com/openai/v1",
-      getApiKey: () => process.env.GROQ_API_KEY,
-      priority: 1,
-    },
     gemini: {
       name: "Google AI Studio (Gemini Flash)",
       modelName: process.env.GEMINI_MODEL || "gemini-flash-lite-latest",
@@ -63,27 +56,34 @@ function getProviderDefinitions(): Record<
         process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
         process.env.GEMINI_API_KEY ||
         process.env.GOOGLE_API_KEY,
-      priority: 2,
+      priority: 1,
     },
-    cerebras: {
-      name: "Cerebras Cloud (Ultra Fast)",
-      modelName: process.env.CEREBRAS_MODEL || "llama3.3-70b",
-      baseURL: "https://api.cerebras.ai/v1",
-      getApiKey: () => process.env.CEREBRAS_API_KEY,
-      priority: 3,
+    groq: {
+      name: "Groq Cloud (High Speed Lead Reasoning)",
+      modelName: process.env.GROQ_MODEL || "qwen/qwen3.8-27b",
+      baseURL: "https://api.groq.com/openai/v1",
+      getApiKey: () => process.env.GROQ_API_KEY,
+      priority: 2,
     },
     openrouter: {
       name: "OpenRouter (Free Tier Models)",
       modelName: process.env.OPENROUTER_MODEL || "nvidia/nemotron-3.5-lightning:free",
       baseURL: "https://openrouter.ai/api/v1",
       getApiKey: () => process.env.OPENROUTER_API_KEY,
-      priority: 4,
+      priority: 3,
     },
     sambanova: {
       name: "SambaNova Cloud (Fast Verifier)",
-      modelName: process.env.SAMBANOVA_MODEL || "gemma-4-31B-it",
+      modelName: process.env.SAMBANOVA_MODEL || "Meta-Llama-3.3-70B-Instruct",
       baseURL: "https://api.sambanova.ai/v1",
       getApiKey: () => process.env.SAMBANOVA_API_KEY,
+      priority: 4,
+    },
+    cerebras: {
+      name: "Cerebras Cloud (Ultra Fast)",
+      modelName: process.env.CEREBRAS_MODEL || "llama3.3-70b",
+      baseURL: "https://api.cerebras.ai/v1",
+      getApiKey: () => process.env.CEREBRAS_API_KEY,
       priority: 5,
     },
     mistral: {
