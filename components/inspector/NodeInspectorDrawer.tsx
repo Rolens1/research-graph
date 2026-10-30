@@ -18,6 +18,7 @@ import { NodeInspectorHeader } from "./NodeInspectorHeader";
 import { NodeCausalConnections } from "./NodeCausalConnections";
 import { SourceSnippetList } from "./SourceSnippetList";
 import { NodeSpecificChat } from "@/components/chat/NodeSpecificChat";
+import { RabbitHolePopover } from "./RabbitHolePopover";
 
 // 3. Type definitions
 type Props = {
@@ -27,9 +28,10 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSelectNode: (nodeId: string) => void;
-  onExploreRabbitHole?: (node: GraphNodeData) => void;
+  onExploreRabbitHole?: (node: GraphNodeData, customFocusAngle?: string) => Promise<void> | void;
   onExcludeNode?: (node: GraphNodeData) => void;
   onRestoreNode?: (node: GraphNodeData) => void;
+  isExpandingRabbitHole?: boolean;
   className?: string;
 };
 
@@ -44,20 +46,21 @@ function NodeInspectorDrawerComponent({
   onExploreRabbitHole,
   onExcludeNode,
   onRestoreNode,
+  isExpandingRabbitHole = false,
   className,
 }: Props) {
+  const [openRabbitHoleNodeId, setOpenRabbitHoleNodeId] = React.useState<string | null>(null);
+  const isRabbitHoleOpen = openRabbitHoleNodeId === node?.id;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
+      if (e.key === "Escape" && isOpen) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!node && !isOpen) return null;
-
   const isDisputed = Boolean(node?.isDisputed || node?.entityType === "dispute");
 
   return (
@@ -96,7 +99,6 @@ function NodeInspectorDrawerComponent({
               <EyeOff className="h-3.5 w-3.5" />
             </button>
           )}
-
           <button
             type="button"
             onClick={onClose}
@@ -191,19 +193,35 @@ function NodeInspectorDrawerComponent({
             onSelectNode={onSelectNode}
           />
 
-          {/* Primary Action Button: Explore Rabbit Hole */}
+          {/* Primary Action Section: Explore Rabbit Hole Popover */}
           <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => onExploreRabbitHole?.(node)}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-mono font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-200 shadow-sm cursor-pointer"
-            >
-              <Compass className="h-4 w-4" />
-              <span>Explore Rabbit Hole Drill Down</span>
-            </button>
-            <p className="text-[10px] font-mono text-center text-muted-foreground mt-1.5">
-              Launch recursive inquiry to investigate child causal mechanisms
-            </p>
+            {isRabbitHoleOpen ? (
+              <RabbitHolePopover
+                node={node}
+                isOpen={isRabbitHoleOpen}
+                onClose={() => setOpenRabbitHoleNodeId(null)}
+                onExpand={async (n, angle) => {
+                  await onExploreRabbitHole?.(n, angle);
+                  setOpenRabbitHoleNodeId(null);
+                }}
+                isExpanding={isExpandingRabbitHole}
+              />
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setOpenRabbitHoleNodeId(node.id)}
+                  disabled={(node.depthLevel ?? 0) >= 3 || isExpandingRabbitHole}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-mono font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Compass className="h-4 w-4" />
+                  <span>{(node.depthLevel ?? 0) >= 3 ? "Max Recursion Limit (Depth 3)" : "Explore Rabbit Hole Drill Down"}</span>
+                </button>
+                <p className="text-[10px] font-mono text-center text-muted-foreground mt-1.5">
+                  Launch recursive inquiry to investigate child causal mechanisms
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Feature 26: Verifiable Source Citations */}

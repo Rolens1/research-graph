@@ -16,6 +16,8 @@ import { InvestigationPlaybackProvider } from "@/components/telemetry/Investigat
 import { useInvestigationStream } from "@/hooks/useInvestigationStream";
 import { useHypothesisMutation } from "@/hooks/useHypothesisMutation";
 import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
+import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
+import type { ExpandResponse } from "@/types/expansion";
 
 // 3. Type definitions
 type Props = {
@@ -62,27 +64,64 @@ export function InvestigationShell({
     initialConfidence: isMock ? MOCK_INVESTIGATION.confidenceScore : 0,
   });
 
-  // Active selections & bidirectional focus targets (Feature 24 / AC-1 to AC-5)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [isInspectorDrawerOpen, setIsInspectorDrawerOpen] = useState(false);
   const [focusNodeTarget, setFocusNodeTarget] = useState<{ nodeId: string; timestamp: number } | null>(null);
   const [focusEventTarget, setFocusEventTarget] = useState<{ eventId: string; timestamp: number } | null>(null);
-
   const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
+  const [expandedNodes, setExpandedNodes] = useState<GraphNodeData[]>([]);
+  const [expandedEdges, setExpandedEdges] = useState<GraphEdgeData[]>([]);
+  const [isExpandingRabbitHole, setIsExpandingRabbitHole] = useState(false);
 
-  // User Hypothesis Mutation Engine (Feature 29)
+  // User Hypothesis Mutation & Expansion Layer (Feature 28 & 29)
+  const allBaseNodes = React.useMemo(() => [...stream.nodes, ...expandedNodes], [stream.nodes, expandedNodes]);
+  const allBaseEdges = React.useMemo(() => [...stream.edges, ...expandedEdges], [stream.edges, expandedEdges]);
+
   const mutation = useHypothesisMutation({
     sessionId,
-    baseNodes: stream.nodes,
-    baseEdges: stream.edges,
+    baseNodes: allBaseNodes,
+    baseEdges: allBaseEdges,
   });
 
-  // Selected node entity lookup
   const selectedNode = React.useMemo(
     () => mutation.displayNodes.find((n) => n.id === selectedNodeId) || null,
     [mutation.displayNodes, selectedNodeId],
+  );
+
+  // Rabbit Hole Recursive Expansion (Feature 28)
+  const handleExploreRabbitHole = useCallback(
+    async (targetNode: GraphNodeData, customFocusAngle?: string) => {
+      setIsExpandingRabbitHole(true);
+      try {
+        const res = await fetch(`/api/research/${sessionId}/expand`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nodeId: targetNode.id,
+            customFocusAngle,
+            existingNodes: mutation.displayNodes,
+            existingEdges: mutation.displayEdges,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to expand rabbit hole");
+        }
+        const data: ExpandResponse = await res.json();
+        if (data.childNodes && data.childNodes.length > 0) {
+          setExpandedNodes((prev) => [...prev, ...data.childNodes]);
+          setFocusNodeTarget({ nodeId: data.childNodes[0].id, timestamp: Date.now() });
+        }
+        if (data.addedEdges && data.addedEdges.length > 0) {
+          setExpandedEdges((prev) => [...prev, ...data.addedEdges]);
+        }
+      } finally {
+        setIsExpandingRabbitHole(false);
+      }
+    },
+    [sessionId, mutation.displayNodes, mutation.displayEdges],
   );
 
   // Timeline Milestone Click -> Canvas Centering & Node Selection (AC-1, AC-5)
@@ -107,22 +146,15 @@ export function InvestigationShell({
     setIsInspectorDrawerOpen(true);
     setFocusNodeTarget({ nodeId, timestamp: Date.now() });
     const matchingEvent = stream.timelineEvents.find((e) => e.nodeId === nodeId);
+    setSelectedEventId(matchingEvent ? matchingEvent.id : null);
     if (matchingEvent) {
-      setSelectedEventId(matchingEvent.id);
       setFocusEventTarget({ eventId: matchingEvent.id, timestamp: Date.now() });
-    } else {
-      setSelectedEventId(null);
     }
   }, [stream.timelineEvents]);
 
   return (
     <InvestigationPlaybackProvider>
-      <div
-        className={cn(
-          "h-full w-full flex flex-col overflow-hidden bg-background relative",
-          className,
-        )}
-      >
+      <div className={cn("h-full w-full flex flex-col overflow-hidden bg-background relative", className)}>
         {/* 1. Top Investigation Header Bar */}
         <InvestigationHeader
           sessionId={sessionId}
@@ -138,7 +170,6 @@ export function InvestigationShell({
 
         {/* 2. Main Middle Split: Zone 1 Canvas (Fluid) + Zone 2 Terminal (380px or 40px) */}
         <div className="flex-1 flex overflow-hidden w-full relative">
-          {/* Zone 1: The Causal Canvas */}
           <KnowledgeCanvas
             nodes={mutation.displayNodes}
             edges={mutation.displayEdges}
@@ -152,11 +183,11 @@ export function InvestigationShell({
             onRestoreNode={mutation.handleRestoreNode}
             onAddHypothesis={mutation.handleAddHypothesis}
             onExploreRabbitHole={(n) => {
-              console.log("[RabbitHole] Requested inquiry for node:", n.id);
+              setSelectedNodeId(n.id);
+              setIsInspectorDrawerOpen(true);
             }}
           />
 
-          {/* Stale Connection & Retry Indicator (AC-7) */}
           {stream.isStale && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 border border-warning/40 shadow-xl backdrop-blur-md">
               <WifiOff className="w-4 h-4 text-warning" />
@@ -174,14 +205,12 @@ export function InvestigationShell({
             </div>
           )}
 
-          {/* Zone 2: Live Agent Terminal */}
           <LiveTerminal
             logs={stream.telemetryLogs}
             isOpen={isTerminalOpen}
             onToggle={() => setIsTerminalOpen(!isTerminalOpen)}
           />
 
-          {/* Feature 25: Node Inspector Drawer (Right Slide-Out) */}
           <NodeInspectorDrawer
             node={selectedNode}
             nodes={mutation.displayNodes}
@@ -195,9 +224,8 @@ export function InvestigationShell({
             onSelectNode={handleSelectNode}
             onExcludeNode={(n) => mutation.handleExcludeNode(n.id)}
             onRestoreNode={(n) => mutation.handleRestoreNode(n.id)}
-            onExploreRabbitHole={(n) => {
-              console.log("[RabbitHole] Requested inquiry for node:", n.id);
-            }}
+            onExploreRabbitHole={handleExploreRabbitHole}
+            isExpandingRabbitHole={isExpandingRabbitHole}
           />
         </div>
 
