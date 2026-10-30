@@ -54,7 +54,7 @@ type Props = {
   selectedNodeId?: string | null;
   hoveredNodeId?: string | null;
   focusNodeTarget?: { nodeId: string; timestamp: number } | null;
-  onSelectNode?: (nodeId: string) => void;
+  onSelectNode?: (nodeId: string | null) => void;
   viewMode?: CanvasViewMode;
   onViewModeChange?: (mode: CanvasViewMode) => void;
   isStreamCompleted?: boolean;
@@ -285,9 +285,9 @@ function KnowledgeCanvasContent({
     return (node?.data as GraphNodeData) ?? null;
   }, [selectedNodeId, flowNodes]);
 
-  // Dismiss node selection from the inspector close button
+  // Dismiss node selection from the inspector close button or canvas background click
   const handleCloseInspector = useCallback(() => {
-    onSelectNode?.("");
+    onSelectNode?.(null);
   }, [onSelectNode]);
 
   return (
@@ -345,6 +345,7 @@ function KnowledgeCanvasContent({
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         onNodeDoubleClick={handleNodeDoubleClick}
+        onPaneClick={handleCloseInspector}
         panOnDrag={!isLocked && !activePresentationNodeId}
         zoomOnScroll={!isLocked && !activePresentationNodeId}
         zoomOnPinch={!isLocked && !activePresentationNodeId}

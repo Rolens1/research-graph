@@ -145,7 +145,10 @@ function SelectedNodeInspectorComponent({
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose?.();
+          }}
           className="h-6 w-6 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
           title="Deselect star"
           aria-label="Close inspector"

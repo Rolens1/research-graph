@@ -67,9 +67,6 @@ export function InvestigationShell({
   const [focusNodeTarget, setFocusNodeTarget] = useState<{ nodeId: string; timestamp: number } | null>(null);
   const [focusEventTarget, setFocusEventTarget] = useState<{ eventId: string; timestamp: number } | null>(null);
 
-  const effectiveSelectedNodeId =
-    selectedNodeId || stream.nodes[0]?.id || (isMock ? MOCK_INVESTIGATION.nodes[0]?.id : null) || null;
-
   const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
 
   // Timeline Milestone Click -> Canvas Centering & Node Selection (AC-1, AC-5)
@@ -126,7 +123,7 @@ export function InvestigationShell({
             nodes={stream.nodes}
             edges={stream.edges}
             isStreamCompleted={stream.status === "completed"}
-            selectedNodeId={effectiveSelectedNodeId}
+            selectedNodeId={selectedNodeId}
             hoveredNodeId={hoveredNodeId}
             focusNodeTarget={focusNodeTarget}
             onSelectNode={handleSelectNode}
@@ -165,7 +162,7 @@ export function InvestigationShell({
           isOpen={isTimelineOpen}
           onToggle={() => setIsTimelineOpen(!isTimelineOpen)}
           selectedEventId={selectedEventId}
-          selectedNodeId={effectiveSelectedNodeId}
+          selectedNodeId={selectedNodeId}
           focusEventTarget={focusEventTarget}
           onSelectEvent={handleSelectEvent}
           onHoverNode={setHoveredNodeId}
