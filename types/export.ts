@@ -66,3 +66,49 @@ export const researchSummaryPayloadSchema = z.object({
     .optional(),
 });
 export type ResearchSummaryPayload = z.infer<typeof researchSummaryPayloadSchema>;
+
+/**
+ * Optional live client graph payload provided for instant PDF compilation
+ */
+export const exportClientPayloadSchema = z.object({
+  query: z.string().optional(),
+  depth: z.enum(["recon", "expedition"]).optional(),
+  status: z.enum(["running", "completed", "failed"]).optional(),
+  confidenceScore: z.number().int().min(0).max(100).optional(),
+  nodes: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string().optional(),
+        entityType: entityTypeSchema.optional(),
+        confidence: z.number().optional(),
+        summary: z.string().optional(),
+        impactLevel: impactLevelSchema.optional(),
+        depthLevel: z.number().optional(),
+        sources: z
+          .array(
+            z.object({
+              url: z.string().optional(),
+              title: z.string().optional(),
+              verbatimSnippet: z.string().optional(),
+              credibilityScore: z.number().optional(),
+              publishedDate: z.string().optional(),
+            }),
+          )
+          .optional(),
+      }),
+    )
+    .optional(),
+  timeline: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        eventDate: z.string().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        sourceUrl: z.string().optional(),
+      }),
+    )
+    .optional(),
+});
+export type ExportClientPayload = z.infer<typeof exportClientPayloadSchema>;

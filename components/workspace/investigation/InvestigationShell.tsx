@@ -18,6 +18,7 @@ import { useHypothesisMutation } from "@/hooks/useHypothesisMutation";
 import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
 import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
 import type { ExpandResponse } from "@/types/expansion";
+import { downloadInvestigationPdf } from "@/lib/export-client";
 
 // 3. Type definitions
 type Props = {
@@ -29,13 +30,11 @@ type Props = {
 
 // 4. Pure helper functions
 function resolveHeaderStatus(
-  streamStatus: InvestigationStreamStatus,
-  fallback: "running" | "completed" | "failed",
+  s: InvestigationStreamStatus,
+  f: "running" | "completed" | "failed",
 ): "running" | "completed" | "failed" {
-  if (streamStatus === "streaming" || streamStatus === "connecting") return "running";
-  if (streamStatus === "completed") return "completed";
-  if (streamStatus === "error") return "failed";
-  return fallback;
+  if (s === "streaming" || s === "connecting") return "running";
+  return s === "completed" ? "completed" : s === "error" ? "failed" : f;
 }
 
 // 5. Component
@@ -48,8 +47,6 @@ export function InvestigationShell({
   // Panel collapse toggles
   const [isTerminalOpen, setIsTerminalOpen] = useState(true);
   const [isTimelineOpen, setIsTimelineOpen] = useState(true);
-
-  // Live investigation stream connection (AC-1, AC-6, AC-7)
   const isMock = sessionId === "mock";
   const displayQuery = query || (isMock ? MOCK_INVESTIGATION.query : "Autonomous Investigation");
 
@@ -166,6 +163,16 @@ export function InvestigationShell({
           onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
           isTimelineOpen={isTimelineOpen}
           onToggleTimeline={() => setIsTimelineOpen(!isTimelineOpen)}
+          onExportPdf={() =>
+            downloadInvestigationPdf(sessionId, {
+              query: displayQuery,
+              depth,
+              status: headerStatus,
+              confidenceScore: stream.confidenceScore,
+              nodes: mutation.displayNodes,
+              timeline: stream.timelineEvents,
+            })
+          }
         />
 
         {/* 2. Main Middle Split: Zone 1 Canvas (Fluid) + Zone 2 Terminal (380px or 40px) */}
@@ -182,10 +189,7 @@ export function InvestigationShell({
             onExcludeNode={mutation.handleExcludeNode}
             onRestoreNode={mutation.handleRestoreNode}
             onAddHypothesis={mutation.handleAddHypothesis}
-            onExploreRabbitHole={(n) => {
-              setSelectedNodeId(n.id);
-              setIsInspectorDrawerOpen(true);
-            }}
+            onExploreRabbitHole={(n) => { setSelectedNodeId(n.id); setIsInspectorDrawerOpen(true); }}
           />
 
           {stream.isStale && (
@@ -216,11 +220,7 @@ export function InvestigationShell({
             nodes={mutation.displayNodes}
             edges={mutation.displayEdges}
             isOpen={isInspectorDrawerOpen}
-            onClose={() => {
-              setIsInspectorDrawerOpen(false);
-              setSelectedNodeId(null);
-              setSelectedEventId(null);
-            }}
+            onClose={() => { setIsInspectorDrawerOpen(false); setSelectedNodeId(null); setSelectedEventId(null); }}
             onSelectNode={handleSelectNode}
             onExcludeNode={(n) => mutation.handleExcludeNode(n.id)}
             onRestoreNode={(n) => mutation.handleRestoreNode(n.id)}

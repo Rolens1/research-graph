@@ -26,7 +26,7 @@ type Props = {
   onToggleTerminal: () => void;
   isTimelineOpen: boolean;
   onToggleTimeline: () => void;
-  onExportPdf?: () => void;
+  onExportPdf?: () => void | Promise<void>;
   className?: string;
 };
 
@@ -59,13 +59,13 @@ export function InvestigationHeader({
   };
 
   const handleExport = async () => {
-    if (onExportPdf) {
-      onExportPdf();
-      return;
-    }
     if (isExporting) return;
     setIsExporting(true);
     try {
+      if (onExportPdf) {
+        await onExportPdf();
+        return;
+      }
       const res = await fetch(`/api/export/${sessionId}/pdf`);
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();

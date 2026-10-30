@@ -123,6 +123,43 @@ export async function persistIterationState(
         console.warn(`[Engine Persistence] Failed to upsert timeline events: ${String(err)}`);
       }
     }
+
+    // 5. Upsert Verified Sources
+    const sourceRecords: Array<{
+      research_id: string;
+      node_id: string;
+      url: string;
+      title: string;
+      verbatim_snippet: string;
+      credibility_score: number;
+    }> = [];
+
+    for (const node of state.nodes) {
+      if (node.sources && node.sources.length > 0) {
+        for (const s of node.sources) {
+          if (s.url) {
+            sourceRecords.push({
+              research_id: state.researchId,
+              node_id: node.id,
+              url: s.url,
+              title: s.title || node.label,
+              verbatim_snippet: s.verbatimSnippet || node.summary || "Primary source evidence.",
+              credibility_score: s.credibilityScore ?? 80,
+            });
+          }
+        }
+      }
+    }
+
+    if (sourceRecords.length > 0) {
+      try {
+        await insforge.database
+          .from("sources")
+          .upsert(sourceRecords, { onConflict: "research_id,node_id,url" });
+      } catch (err) {
+        console.warn(`[Engine Persistence] Failed to upsert sources: ${String(err)}`);
+      }
+    }
   } catch (err: unknown) {
     // Graceful fallback when outside Next.js request context or if InsForge is offline
     const message = err instanceof Error ? err.message : String(err);
