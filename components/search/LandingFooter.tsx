@@ -31,7 +31,7 @@ export function LandingFooter({ className }: Props) {
         </span>
         <span>&bull;</span>
         <span className="flex items-center gap-1.5">
-          <ShieldCheck className="h-3 w-3 text-emerald-500" />
+          <ShieldCheck className="h-3 w-3 text-success" />
           <span>InsForge RLS</span>
         </span>
       </div>

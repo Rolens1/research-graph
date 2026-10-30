@@ -6,6 +6,7 @@ import { LogIn, LogOut, LayoutGrid, User, Sparkles } from "lucide-react";
 
 // 2. Internal imports
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 // 3. Type definitions
@@ -31,7 +32,9 @@ export function LandingHeader({ className }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
+        <ThemeToggle />
+
         {isLoading ? (
           <div className="h-8 w-24 rounded-lg bg-muted/50 animate-pulse border border-border" />
         ) : user ? (

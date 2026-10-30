@@ -10,7 +10,7 @@ import { MOCK_INVESTIGATION } from "@/lib/mock-investigation";
 import { InvestigationHeader } from "./InvestigationHeader";
 import { KnowledgeCanvas } from "@/components/canvas/KnowledgeCanvas";
 import { LiveTerminal } from "@/components/telemetry/LiveTerminal";
-import { ChronoTimelinePlaceholder } from "./ChronoTimelinePlaceholder";
+import { ChronoTimeline } from "@/components/timeline/ChronoTimeline";
 import { InvestigationPlaybackProvider } from "@/components/telemetry/InvestigationPlaybackContext";
 import { useInvestigationStream } from "@/hooks/useInvestigationStream";
 import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
@@ -46,13 +46,18 @@ export function InvestigationShell({
   const [isTimelineOpen, setIsTimelineOpen] = useState(true);
 
   // Live investigation stream connection (AC-1, AC-6, AC-7)
+  const isMock = sessionId === "mock";
+  const displayQuery = query || (isMock ? MOCK_INVESTIGATION.query : "Autonomous Investigation");
+
   const stream = useInvestigationStream({
     researchId: sessionId,
-    initialNodes: MOCK_INVESTIGATION.nodes,
-    initialEdges: MOCK_INVESTIGATION.edges,
-    initialLogs: MOCK_INVESTIGATION.telemetry,
-    initialTimeline: MOCK_INVESTIGATION.timeline,
-    initialConfidence: MOCK_INVESTIGATION.confidenceScore,
+    query: query || (isMock ? MOCK_INVESTIGATION.query : undefined),
+    depth,
+    initialNodes: isMock ? MOCK_INVESTIGATION.nodes : [],
+    initialEdges: isMock ? MOCK_INVESTIGATION.edges : [],
+    initialLogs: isMock ? MOCK_INVESTIGATION.telemetry : [],
+    initialTimeline: isMock ? MOCK_INVESTIGATION.timeline : [],
+    initialConfidence: isMock ? MOCK_INVESTIGATION.confidenceScore : 0,
   });
 
   // Active selections (derived fallback avoids cascading render effects)
@@ -60,10 +65,9 @@ export function InvestigationShell({
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const effectiveSelectedNodeId =
-    selectedNodeId || stream.nodes[0]?.id || MOCK_INVESTIGATION.nodes[0]?.id || null;
+    selectedNodeId || stream.nodes[0]?.id || (isMock ? MOCK_INVESTIGATION.nodes[0]?.id : null) || null;
 
-  const displayQuery = query || MOCK_INVESTIGATION.query;
-  const headerStatus = resolveHeaderStatus(stream.status, MOCK_INVESTIGATION.status);
+  const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
 
   const handleSelectEvent = (eventId: string) => {
     setSelectedEventId(eventId);
@@ -132,12 +136,14 @@ export function InvestigationShell({
         </div>
 
         {/* 3. Bottom Strip: Zone 3 Chrono Timeline (112px or 36px) */}
-        <ChronoTimelinePlaceholder
+        <ChronoTimeline
           events={stream.timelineEvents}
+          nodes={stream.nodes}
           isOpen={isTimelineOpen}
           onToggle={() => setIsTimelineOpen(!isTimelineOpen)}
           selectedEventId={selectedEventId}
           onSelectEvent={handleSelectEvent}
+          isLoading={stream.isStreaming || stream.status === "connecting"}
         />
       </div>
     </InvestigationPlaybackProvider>

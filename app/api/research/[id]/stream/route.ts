@@ -63,6 +63,44 @@ async function verifySessionAuth(
     .single();
 
   if (error || !research) {
+    // If not found in database, check if it's an ad-hoc session with a valid query param
+    // If authenticated user provided a query param, auto-create the session row in DB!
+    if (authData?.user && queryParam) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(researchId);
+      const insertPayload: Record<string, unknown> = {
+        user_id: authData.user.id,
+        query: queryParam,
+        status: "running",
+        confidence_score: 0,
+      };
+      if (isUuid) {
+        insertPayload.id = researchId;
+      }
+
+      const { data: newRow, error: insertErr } = await insforge.database
+        .from("researches")
+        .insert(insertPayload)
+        .select("id, user_id, query, status, confidence_score, final_synthesis")
+        .single();
+
+      if (!insertErr && newRow) {
+        return { ok: true, record: newRow as unknown as ResearchRecord };
+      }
+    }
+
+    // Guest fallback if user is not authenticated but has query
+    if (!authData?.user && queryParam) {
+      return {
+        ok: true,
+        record: {
+          id: researchId,
+          query: queryParam,
+          status: "running",
+          confidence_score: 0,
+        },
+      };
+    }
+
     return { ok: false, status: 404, error: "Investigation session not found" };
   }
 
@@ -325,7 +363,10 @@ export async function GET(
   const searchParams = req.nextUrl.searchParams;
   const queryParam = searchParams.get("q") || "";
   const depthParam = searchParams.get("depth") === "expedition" ? "expedition" : "recon";
-  const isGuestSession = researchId.startsWith("guest_");
+  const isGuestSession =
+    researchId.startsWith("guest_") ||
+    researchId.startsWith("demo") ||
+    researchId === "mock";
 
   // 1. Session Authentication & Authorization Guard (Satisfies AC-4)
   const authResult = await verifySessionAuth(researchId, isGuestSession, queryParam);

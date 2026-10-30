@@ -13,6 +13,8 @@ export type InvestigationStreamStatus =
 
 export interface UseInvestigationStreamOptions {
   researchId: string;
+  query?: string;
+  depth?: "recon" | "expedition";
   initialNodes?: MockGraphNode[];
   initialEdges?: MockGraphEdge[];
   initialLogs?: TelemetryLog[];

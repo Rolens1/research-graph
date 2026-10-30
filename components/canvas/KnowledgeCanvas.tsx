@@ -283,6 +283,23 @@ function KnowledgeCanvasContent({
         </div>
       </div>
 
+      {/* Sounding / Empty State during Initial Investigation */}
+      {flowNodes.length === 0 && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 space-y-3">
+          <div className="relative flex items-center justify-center h-16 w-16 rounded-full bg-accent/10 border border-accent/30 animate-pulse">
+            <Compass className="h-8 w-8 text-accent animate-spin" />
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-xs font-mono font-semibold text-foreground tracking-wider uppercase">
+              Sounding Causal Waters
+            </p>
+            <p className="text-[11px] font-mono text-muted-foreground max-w-xs">
+              Autonomous agents are extracting entities, verifying evidence, and plotting topology...
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Global SVG Marker Definitions for Directed Causal Arrows */}
       <CanvasSvgMarkers />
 

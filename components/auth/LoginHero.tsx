@@ -39,7 +39,7 @@ export function LoginHero({ className = "" }: Props) {
 
           <div className="p-4 rounded-xl border border-border bg-card/60 backdrop-blur-xs space-y-2">
             <div className="flex items-center gap-2 text-foreground font-medium text-xs font-mono">
-              <GitBranch className="h-4 w-4 text-emerald-500" />
+              <GitBranch className="h-4 w-4 text-success" />
               <span>DETERMINISTIC TOPOLOGY</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">

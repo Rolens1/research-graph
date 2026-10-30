@@ -11,7 +11,7 @@ import { SearchHelm, type SearchDepth } from "@/components/search/SearchHelm";
 import { IntakeMessenger } from "@/components/search/IntakeMessenger";
 import { PromptSeeds } from "@/components/search/PromptSeeds";
 import { LandingFooter } from "@/components/search/LandingFooter";
-import { useAuth } from "@/hooks/useAuth";
+import { createResearchSessionAction } from "@/actions/research";
 import type { IntakeMessage } from "@/types/intake";
 
 // 3. Type definitions (none required beyond SearchDepth)
@@ -19,7 +19,6 @@ import type { IntakeMessage } from "@/types/intake";
 // 4. Component (Clean Google/Yahoo/Astra style neutral search landing page)
 export function HomePage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [depth, setDepth] = useState<SearchDepth>("recon");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,33 +34,45 @@ export function HomePage() {
     setIsIntakeActive(true);
   };
 
-  const handleConfirmLaunch = (refinedQuery: string, intakeHistory: IntakeMessage[]) => {
+  const handleConfirmLaunch = async (refinedQuery: string, intakeHistory: IntakeMessage[]) => {
     setIsSubmitting(true);
-    const sessionId = crypto.randomUUID();
     const finalQuery = refinedQuery.trim() || query.trim();
-    const targetUrl = `/workspace/${sessionId}?q=${encodeURIComponent(finalQuery)}&depth=${depth}`;
 
     try {
-      sessionStorage.setItem(
-        "pending_investigation",
-        JSON.stringify({
-          query: finalQuery,
-          originalQuery: query.trim(),
-          depth,
-          sessionId,
-          intakeHistory,
-        }),
-      );
+      const result = await createResearchSessionAction({
+        query: finalQuery,
+        depth,
+      });
+
+      if (!result.success || !result.researchId) {
+        console.error("Failed to start research:", result.error);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const sessionId = result.researchId;
+      const targetUrl = `/workspace/${sessionId}?q=${encodeURIComponent(finalQuery)}&depth=${depth}`;
+
+      try {
+        sessionStorage.setItem(
+          "pending_investigation",
+          JSON.stringify({
+            query: finalQuery,
+            originalQuery: query.trim(),
+            depth,
+            sessionId,
+            intakeHistory,
+          }),
+        );
+      } catch (err) {
+        console.error("Failed to store pending investigation:", err);
+      }
+
+      router.push(targetUrl);
     } catch (err) {
-      console.error("Failed to store pending investigation:", err);
+      console.error("Error creating investigation session:", err);
+      setIsSubmitting(false);
     }
-
-    if (!user) {
-      router.push(`/login?redirectTo=${encodeURIComponent(targetUrl)}`);
-      return;
-    }
-
-    router.push(targetUrl);
   };
 
   return (

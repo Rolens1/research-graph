@@ -30,6 +30,8 @@ const LAYOUT_DEBOUNCE_MS = 400;
 // 3. Hook implementation
 export function useInvestigationStream({
   researchId,
+  query,
+  depth,
   initialNodes = [],
   initialEdges = [],
   initialLogs = [],
@@ -142,7 +144,11 @@ export function useInvestigationStream({
   useEffect(() => {
     if (!enabled || !researchId || researchId === "mock") return;
 
-    const streamUrl = `/api/research/${encodeURIComponent(researchId)}/stream`;
+    const searchParams = new URLSearchParams();
+    if (query) searchParams.set("q", query);
+    if (depth) searchParams.set("depth", depth);
+    const qs = searchParams.toString();
+    const streamUrl = `/api/research/${encodeURIComponent(researchId)}/stream${qs ? `?${qs}` : ""}`;
     const es = new EventSource(streamUrl);
     eventSourceRef.current = es;
 
@@ -220,7 +226,7 @@ export function useInvestigationStream({
       eventSourceRef.current = null;
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [enabled, researchId, reconnectTrigger, scheduleDebouncedLayout, flushPendingLayout]);
+  }, [enabled, researchId, query, depth, reconnectTrigger, scheduleDebouncedLayout, flushPendingLayout]);
 
   return {
     status,
