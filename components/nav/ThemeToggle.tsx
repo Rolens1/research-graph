@@ -15,8 +15,8 @@ type Props = {
 
 // 4. Component
 export function ThemeToggle({ className }: Props) {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { theme, toggleTheme, mounted } = useTheme();
+  const isDark = mounted && theme === "dark";
 
   return (
     <button
@@ -29,7 +29,9 @@ export function ThemeToggle({ className }: Props) {
         className
       )}
     >
-      {isDark ? (
+      {!mounted ? (
+        <span className="h-4 w-4" aria-hidden="true" />
+      ) : isDark ? (
         <Sun className="h-4 w-4 transition-transform hover:rotate-45 text-entity-decision" />
       ) : (
         <Moon className="h-4 w-4 transition-transform hover:-rotate-12 text-foreground" />
