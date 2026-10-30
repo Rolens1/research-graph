@@ -52,9 +52,9 @@ STRICT INSTRUCTIONS:
    - Extract a real, verbatim quote fragment (at least 15 characters) for "quoteSnippet".
    - Include specific financial metrics ($ valuations, acquisition amounts, cash payouts) and co-founders/collaborators in entity summaries and statements whenever present.
 
-3. STRICT LIMITS:
-   - Output at most 6 high-relevance entities.
-   - Output at most 5 concrete historical facts.
+3. EXTRACT EXTENSIVE NETWORK:
+   - Extract 8 to 15 high-relevance entities (capture all key organizations, leaders, co-founders, syndicates, acquisitions, venture investments, and pivotal milestones).
+   - Extract 8 to 15 concrete historical facts with dates, financial metrics ($ valuations, acquisition amounts, cash payouts), and co-founders/collaborators.
 
 4. FORMAT:
    - Respond ONLY with valid JSON matching this schema:
@@ -192,9 +192,9 @@ Extract the top candidate entities (max 6) and core factual statements (max 5) w
       { preferredProvider: options?.preferredProvider, role: "reader" },
     );
 
-    // Post-process entities: clamp to 6 (AC-4), fallback date/quote heuristics if missing
+    // Post-process entities: allow up to 15 entities per batch, fallback date/quote heuristics if missing
     const validEntities: CandidateEntity[] = [];
-    for (const ent of result.entities.slice(0, 6)) {
+    for (const ent of result.entities.slice(0, 15)) {
       const sourceMatch = urlMap.get(ent.sourceUrl) || searchResults[0];
       const fallbackDates = extractDatesFromText(ent.quoteSnippet || sourceMatch.content);
       const temporal = ent.temporalAnchor || fallbackDates[0] || undefined;
@@ -218,7 +218,7 @@ Extract the top candidate entities (max 6) and core factual statements (max 5) w
 
     // Post-process facts: resolve title, domain, provenance
     const validFacts: ExtractedFact[] = [];
-    for (const fact of result.facts.slice(0, 5)) {
+    for (const fact of result.facts.slice(0, 15)) {
       const sourceMatch = urlMap.get(fact.sourceUrl) || searchResults[0];
       const quote = fact.quoteSnippet && fact.quoteSnippet.length >= 10
         ? fact.quoteSnippet

@@ -158,11 +158,42 @@ export async function executeVisualizer(
       });
     }
 
-    // 5. Timeline Event Filtering (AC-6)
+    // 5. Cross-cycle cohesion: bridge any newly added node to existing graph nodes if not already linked
+    if (input.existingNodes && input.existingNodes.length > 0) {
+      for (const newNode of canonicalNodes) {
+        const hasExistingConnection = mappedEdges.some(
+          (e) => (e.source === newNode.id && input.existingNodes.some((old) => old.id === e.target)) ||
+                 (e.target === newNode.id && input.existingNodes.some((old) => old.id === e.source)),
+        );
+
+        if (!hasExistingConnection) {
+          const targetOldNode = input.existingNodes.find((old) =>
+            old.entityType === "actor" || old.pathwayRole === "core_causal" || old.impactLevel === "critical",
+          ) || input.existingNodes[input.existingNodes.length - 1];
+
+          if (targetOldNode && targetOldNode.id !== newNode.id) {
+            const bridgeKey = `${targetOldNode.id}->${newNode.id}`;
+            if (!mappedEdges.some((e) => e.id === bridgeKey)) {
+              mappedEdges.push({
+                id: bridgeKey,
+                source: targetOldNode.id,
+                target: newNode.id,
+                relationType: "leads_to",
+                label: "led to / associated venture",
+                isDisputed: false,
+                explanation: `Causal sequence linking ${targetOldNode.label} to ${newNode.label}.`,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // 6. Timeline Event Filtering (AC-6)
     const timelineEvents = extractChronologicalTimelineEvents(canonicalNodes, input.researchId);
     logThought(`[Visualizer] Curated ${timelineEvents.length} chronological milestones for Zone 3 Chrono Timeline.`);
 
-    // 6. Enigma Mystery Synthesis (AC-7)
+    // 7. Enigma Mystery Synthesis (AC-7)
     const enigmaNodes: GraphNodeData[] = [];
     if (input.isEnigmaTriggered || input.enigmaDeclaration) {
       const enigmaCard = buildEnigmaNode(input.enigmaDeclaration, input.unbridgedGaps[0]);

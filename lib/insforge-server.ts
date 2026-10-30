@@ -4,7 +4,9 @@ import type { InsForgeClient } from "@insforge/sdk";
 
 const insforgeUrl =
   process.env.NEXT_PUBLIC_INSFORGE_URL || "https://pprn26i7.us-east.insforge.app";
-const insforgeAnonKey = process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || "";
+const insforgeAnonKey =
+  process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY ||
+  "anon_d05d2e2d6987608e7786bd21c23125abd753514256ca0b2d4577447612f4e7db";
 
 /**
  * Creates an authenticated InsForge client for Server Actions and Server Components.

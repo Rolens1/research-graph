@@ -75,6 +75,6 @@ export function detectCausalGaps(
     }
   }
 
-  // Limit to top 5 prioritized gaps to avoid prompt bloating
-  return gaps.slice(0, 5);
+  // Limit to top 8 prioritized gaps to provide diverse exploration avenues
+  return gaps.slice(0, 8);
 }

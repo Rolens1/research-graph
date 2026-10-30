@@ -121,6 +121,25 @@ export function buildSourceCitations(entity: VerifiedEntity): SourceCitation[] {
  * Maps verified causal relations into deduplicated graph edges.
  * Satisfies AC-5.
  */
+function findResolvedSlug(raw: string, slugRegistry: Map<string, string>): string | null {
+  if (!raw) return null;
+  if (slugRegistry.has(raw)) return slugRegistry.get(raw)!;
+  const lower = raw.toLowerCase().trim();
+  if (slugRegistry.has(lower)) return slugRegistry.get(lower)!;
+
+  const stripped = lower.replace(/^(actor|event|technology|decision|dispute)_/, "");
+  if (slugRegistry.has(stripped)) return slugRegistry.get(stripped)!;
+
+  for (const [key, val] of slugRegistry.entries()) {
+    if (key.length >= 3 && (key.includes(lower) || lower.includes(key) || val.includes(stripped) || stripped.includes(val))) {
+      return val;
+    }
+  }
+
+  if (/^[a-z]+_[a-z0-9-]+$/.test(raw)) return raw;
+  return null;
+}
+
 export function mapVerifiedRelationsToEdges(
   relations: VerifiedCausalRelation[],
   slugRegistry: Map<string, string>,
@@ -135,8 +154,8 @@ export function mapVerifiedRelationsToEdges(
   }
 
   for (const rel of relations) {
-    const resolvedSource = slugRegistry.get(rel.source) || slugRegistry.get(rel.source.toLowerCase()) || rel.source;
-    const resolvedTarget = slugRegistry.get(rel.target) || slugRegistry.get(rel.target.toLowerCase()) || rel.target;
+    const resolvedSource = findResolvedSlug(rel.source, slugRegistry) || rel.source;
+    const resolvedTarget = findResolvedSlug(rel.target, slugRegistry) || rel.target;
 
     if (!resolvedSource || !resolvedTarget || resolvedSource === resolvedTarget) {
       continue;

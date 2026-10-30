@@ -25,7 +25,7 @@ CORE RULES:
    - Each query must have a clear temporal anchor (e.g. "Prior to 2018", "Foundational patent filing era", "1999-2002 liquidity event era").
 
 3. STRICT LIMIT & FORMAT:
-   - Output EXACTLY 2 backward causal sub-queries per planning cycle.
+   - Output 2 to 3 backward causal sub-queries per planning cycle.
    - You MUST respond with ONLY valid JSON matching this exact structure:
 {
   "reasoningSteps": ["string", "string"],
@@ -53,7 +53,7 @@ function buildFallbackPlan(
   detectedGaps: CausalGapTarget[],
   reasoningNote: string,
 ): ArchitectPlanOutput {
-  const topGaps = detectedGaps.slice(0, 2);
+  const topGaps = detectedGaps.slice(0, 3);
   const subQueries = topGaps.map((gap, index) => {
     const isGenesis = gap.gapId.startsWith("genesis");
     const query = isGenesis
@@ -326,9 +326,9 @@ TASK:
 
         const rawParsed = JSON.parse(cleanJson);
 
-        // Pre-clamp subQueries to 2 before schema validation to prevent .max(2) rejection
-        if (rawParsed && Array.isArray(rawParsed.subQueries) && rawParsed.subQueries.length > 2) {
-          rawParsed.subQueries = rawParsed.subQueries.slice(0, 2);
+        // Pre-clamp subQueries to 3 before schema validation
+        if (rawParsed && Array.isArray(rawParsed.subQueries) && rawParsed.subQueries.length > 3) {
+          rawParsed.subQueries = rawParsed.subQueries.slice(0, 3);
         }
 
         const validated = architectPlanOutputSchema.parse(rawParsed);

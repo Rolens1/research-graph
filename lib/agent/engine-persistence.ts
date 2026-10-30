@@ -21,6 +21,12 @@ export async function persistIterationState(
     if (!getInsForgeServerClient) return;
     const insforge = await getInsForgeServerClient();
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(state.researchId);
+    if (!isUuid) {
+      // Guest or mock string ID is preserved in coordinator memory
+      return;
+    }
+
     // 1. Upsert Research Session Record
     try {
       await insforge.database
@@ -31,8 +37,8 @@ export async function persistIterationState(
             query: state.query,
             status: state.status,
             confidence_score: state.confidenceScore,
-            final_synthesis: state.synthesis,
-            completed_at: options?.isFinal ? new Date().toISOString() : null,
+            final_synthesis: state.synthesis || null,
+            completed_at: options?.isFinal || state.status === "completed" ? new Date().toISOString() : null,
           },
           { onConflict: "id" },
         );
@@ -49,8 +55,9 @@ export async function persistIterationState(
         entity_type: node.entityType,
         summary: node.summary,
         confidence: node.confidence,
-        impact_level: node.impactLevel,
-        pathway_role: node.pathwayRole,
+        depth_level: node.depthLevel ?? 0,
+        parent_node_id: node.parentNodeId || null,
+        is_user_added: Boolean(node.isUserAdded),
       }));
 
       try {
@@ -65,19 +72,19 @@ export async function persistIterationState(
     // 3. Upsert Causal Graph Edges
     if (state.edges.length > 0) {
       const edgeRecords = state.edges.map((edge) => ({
-        id: edge.id,
         research_id: state.researchId,
-        source: edge.source,
-        target: edge.target,
+        source_id: edge.source,
+        target_id: edge.target,
         relation_type: edge.relationType,
-        label: edge.label,
+        label: edge.label || edge.relationType,
         is_disputed: Boolean(edge.isDisputed),
+        explanation: edge.explanation || null,
       }));
 
       try {
         await insforge.database
           .from("edges")
-          .upsert(edgeRecords, { onConflict: "id" });
+          .upsert(edgeRecords, { onConflict: "research_id,source_id,target_id" });
       } catch (err) {
         console.warn(`[Engine Persistence] Failed to upsert edges: ${String(err)}`);
       }
@@ -86,11 +93,10 @@ export async function persistIterationState(
     // 4. Upsert Chronological Timeline Events
     if (state.timelineEvents.length > 0) {
       const timelineRecords = state.timelineEvents.map((event) => ({
-        id: `${state.researchId}_${event.nodeId}`,
         research_id: state.researchId,
-        node_id: event.nodeId,
+        node_id: event.nodeId || null,
         event_date: event.eventDate,
-        parsed_timestamp: event.parsedTimestamp || null,
+        parsed_timestamp: event.parsedTimestamp ? Number(event.parsedTimestamp) : null,
         title: event.title,
         description: event.description,
       }));
@@ -98,7 +104,7 @@ export async function persistIterationState(
       try {
         await insforge.database
           .from("timeline_events")
-          .upsert(timelineRecords, { onConflict: "id" });
+          .upsert(timelineRecords, { onConflict: "research_id,node_id,event_date" });
       } catch (err) {
         console.warn(`[Engine Persistence] Failed to upsert timeline events: ${String(err)}`);
       }

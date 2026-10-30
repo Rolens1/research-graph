@@ -71,7 +71,17 @@ export function WorkspaceClient({
 
   const query = initialQuery || pendingData.query || "";
   const depth = initialDepth || pendingData.depth || "recon";
-  const [showTransition, setShowTransition] = useState(true);
+  const [showTransition, setShowTransition] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = sessionStorage.getItem("pending_investigation");
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return !parsed.sessionId || parsed.sessionId === sessionId;
+    } catch {
+      return false;
+    }
+  });
 
   // Clean up pending investigation storage once mounted
   useEffect(() => {

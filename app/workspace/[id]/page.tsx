@@ -15,10 +15,33 @@ export default async function WorkspacePage({ params, searchParams }: PageProps)
   const resolvedSearchParams = await searchParams;
 
   const sessionId = resolvedParams.id;
-  const initialQuery =
+  let initialQuery =
     typeof resolvedSearchParams.q === "string" ? resolvedSearchParams.q : undefined;
   const initialDepth =
     resolvedSearchParams.depth === "expedition" ? "expedition" : "recon";
+
+  if (!initialQuery) {
+    try {
+      const { getActiveResearchRun } = await import("@/lib/agent/stream-coordinator");
+      const active = getActiveResearchRun(sessionId);
+      if (active?.query) {
+        initialQuery = active.query;
+      } else {
+        const { getInsForgeServerClient } = await import("@/lib/insforge-server");
+        const insforge = await getInsForgeServerClient();
+        const { data } = await insforge.database
+          .from("researches")
+          .select("query")
+          .eq("id", sessionId)
+          .single();
+        if (data?.query) {
+          initialQuery = data.query;
+        }
+      }
+    } catch {
+      // Fallback to client state
+    }
+  }
 
   return (
     <WorkspaceClient

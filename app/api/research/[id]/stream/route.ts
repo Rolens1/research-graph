@@ -3,6 +3,7 @@ import { getInsForgeServerClient } from "@/lib/insforge-server";
 import {
   subscribeToResearch,
   startResearchExecution,
+  getActiveResearchRun,
 } from "@/lib/agent/stream-coordinator";
 import type { SseEvent, TelemetryLog } from "@/types/telemetry";
 import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
@@ -41,6 +42,22 @@ async function verifySessionAuth(
   isGuestSession: boolean,
   queryParam: string,
 ): Promise<AuthResult> {
+  const activeRun = getActiveResearchRun(researchId);
+
+  // If active run exists in coordinator memory, we trust its current status and query
+  if (activeRun) {
+    return {
+      ok: true,
+      record: {
+        id: researchId,
+        query: activeRun.query || queryParam || "Active Exploration",
+        status: activeRun.status,
+        confidence_score: activeRun.confidenceScore || 0,
+        final_synthesis: activeRun.finalSynthesis,
+      },
+    };
+  }
+
   if (isGuestSession) {
     return {
       ok: true,
@@ -89,7 +106,7 @@ async function verifySessionAuth(
     }
 
     // Guest fallback if user is not authenticated but has query
-    if (!authData?.user && queryParam) {
+    if (queryParam) {
       return {
         ok: true,
         record: {
@@ -104,7 +121,8 @@ async function verifySessionAuth(
     return { ok: false, status: 404, error: "Investigation session not found" };
   }
 
-  if (!authData?.user || research.user_id !== authData.user.id) {
+  // Allow access if user_id is null (public guest exploration stored in DB) or matches current user
+  if (research.user_id && (!authData?.user || research.user_id !== authData.user.id)) {
     return { ok: false, status: 401, error: "Unauthorized access to investigation session" };
   }
 
@@ -368,6 +386,13 @@ export async function GET(
     researchId.startsWith("demo") ||
     researchId === "mock";
 
+  // Check coordinator memory first!
+  const activeRun = getActiveResearchRun(researchId);
+  if (activeRun && activeRun.status === "completed") {
+    // Already finished in coordinator memory: replay the buffered events directly!
+    return buildLiveResearchStream(req, researchId);
+  }
+
   // 1. Session Authentication & Authorization Guard (Satisfies AC-4)
   const authResult = await verifySessionAuth(researchId, isGuestSession, queryParam);
   if (!authResult.ok) {
@@ -377,20 +402,25 @@ export async function GET(
   const { record } = authResult;
 
   // 2. Historical Replay for Already Completed Investigations (Satisfies AC-5)
-  if (!isGuestSession && record.status === "completed") {
+  if (record.status === "completed") {
     return buildHistoricalReplayStream(researchId, record);
   }
 
-  // 3. Lazy Startup Check if Session is Not Yet Running in Coordinator
-  const effectiveQuery = isGuestSession ? queryParam : record.query;
-  if (effectiveQuery && (isGuestSession || record.status === "running")) {
-    await startResearchExecution({
-      researchId,
-      query: effectiveQuery,
-      depth: depthParam,
-      maxIterations: depthParam === "expedition" ? 3 : 1,
-      maxQueriesBudget: 12,
-    });
+  // 3. Lazy Startup Check: Only start execution if record is NOT completed and not already running
+  const isAlreadyDone = record.status === "completed" || (activeRun && activeRun.status === "completed");
+  const isAlreadyRunning = activeRun && activeRun.status === "running";
+
+  if (!isAlreadyDone && !isAlreadyRunning) {
+    const effectiveQuery = isGuestSession ? queryParam : record.query;
+    if (effectiveQuery) {
+      await startResearchExecution({
+        researchId,
+        query: effectiveQuery,
+        depth: depthParam,
+        maxIterations: depthParam === "expedition" ? 3 : 1,
+        maxQueriesBudget: 12,
+      });
+    }
   }
 
   // 4. Live Multi-Agent Stream Connection (Satisfies AC-3, AC-6, AC-7, AC-8)

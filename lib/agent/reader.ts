@@ -103,7 +103,7 @@ export async function executeReaderInvestigation(
   const searchPromises = subQueries.map(async (sq) => {
     const { results } = await searchWeb(sq.query, {
       depth: "advanced",
-      maxResults: 4,
+      maxResults: 6,
       includeRawContent: includeFullContent,
       relatedNodeContext: existingGraphKeywords,
       signal: effectiveSearchSignal,

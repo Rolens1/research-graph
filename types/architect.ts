@@ -48,7 +48,7 @@ export type EnigmaDeclaration = z.infer<typeof enigmaDeclarationSchema>;
 export const architectPlanOutputSchema = z.object({
   reasoningSteps: z.array(z.string()).min(1),
   detectedGaps: z.array(causalGapTargetSchema),
-  subQueries: z.array(backwardSubQuerySchema).max(2),
+  subQueries: z.array(backwardSubQuerySchema).max(4),
   enigma: enigmaDeclarationSchema.optional(),
   isInvestigationComplete: z.boolean().default(false),
   completionReason: z.enum([

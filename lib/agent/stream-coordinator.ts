@@ -44,7 +44,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForCoordinator._chronocause_active_runs = activeRuns;
 }
 
-const MAX_RECENT_EVENTS_BUFFER = 50;
+const MAX_RECENT_EVENTS_BUFFER = 1000;
 const CLIENT_ABSENCE_GRACE_MS = 60_000; // 60 seconds
 
 /**
@@ -187,7 +187,7 @@ export async function startResearchExecution(
   options: ResearchEngineOptions,
 ): Promise<{ success: boolean; researchId: string; isNew: boolean }> {
   const existing = activeRuns.get(options.researchId);
-  if (existing && existing.status === "running") {
+  if (existing && (existing.status === "running" || existing.status === "completed")) {
     return { success: true, researchId: options.researchId, isNew: false };
   }
 

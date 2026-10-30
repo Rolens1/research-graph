@@ -196,6 +196,11 @@ export async function* runMasterResearchLoop(
     }
   }
 
+  if (state.status === "running") {
+    state.status = "completed";
+    state.completionReason = state.completionReason || "Completed target investigation cycles.";
+  }
+
   if (!state.synthesis) {
     state.synthesis = generateExecutiveSynthesis(state);
   }
