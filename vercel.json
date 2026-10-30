@@ -1,12 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
   "functions": {
     "app/api/research/start/route.ts": {
-      "maxDuration": 30,
+      "maxDuration": 60,
       "memory": 1024
     },
     "app/api/research/[id]/stream/route.ts": {
       "maxDuration": 180,
+      "memory": 1024
+    },
+    "app/api/research/[id]/expand/route.ts": {
+      "maxDuration": 120,
+      "memory": 1024
+    },
+    "app/api/research/[id]/mutate/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "app/api/research/[id]/chat/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "app/api/export/[id]/pdf/route.ts": {
+      "maxDuration": 60,
       "memory": 1024
     }
   }
