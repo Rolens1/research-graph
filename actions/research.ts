@@ -49,21 +49,8 @@ export async function createResearchSessionAction(input: unknown): Promise<{
 
       researchId = data.id;
     } else {
-      // Guest / unauthenticated fallback session identifier with valid UUID persistence
-      researchId = crypto.randomUUID();
-      try {
-        await insforge.database
-          .from("researches")
-          .insert({
-            id: researchId,
-            user_id: null,
-            query,
-            status: "running",
-            confidence_score: 0,
-          });
-      } catch (err) {
-        console.warn("[actions/research:createResearchSessionAction] Guest DB session insert warning:", err);
-      }
+      // Guest / unauthenticated fallback session identifier with guest_ prefix
+      researchId = "guest_" + crypto.randomUUID().replace(/-/g, "").substring(0, 16);
     }
 
     // Launch multi-agent research loop in the coordinator asynchronously

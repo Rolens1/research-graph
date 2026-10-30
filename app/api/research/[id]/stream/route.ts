@@ -105,20 +105,16 @@ async function verifySessionAuth(
       }
     }
 
-    // Guest fallback if user is not authenticated but has query
-    if (queryParam) {
-      return {
-        ok: true,
-        record: {
-          id: researchId,
-          query: queryParam,
-          status: "running",
-          confidence_score: 0,
-        },
-      };
-    }
-
-    return { ok: false, status: 404, error: "Investigation session not found" };
+    // Resilient fallback for newly spawned or guest investigations
+    return {
+      ok: true,
+      record: {
+        id: researchId,
+        query: queryParam || "Autonomous Investigation",
+        status: "running",
+        confidence_score: 0,
+      },
+    };
   }
 
   // Allow access if user_id is null (public guest exploration stored in DB) or matches current user
@@ -411,7 +407,7 @@ export async function GET(
   const isAlreadyRunning = activeRun && activeRun.status === "running";
 
   if (!isAlreadyDone && !isAlreadyRunning) {
-    const effectiveQuery = isGuestSession ? queryParam : record.query;
+    const effectiveQuery = queryParam || record.query || "Autonomous Investigation";
     if (effectiveQuery) {
       await startResearchExecution({
         researchId,

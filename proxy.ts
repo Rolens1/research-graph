@@ -39,7 +39,8 @@ export async function proxy(request: NextRequest) {
   const isGuestStreamApi =
     pathname.includes("/guest_") ||
     pathname.includes("/demo") ||
-    pathname.includes("/mock/");
+    pathname.includes("/mock/") ||
+    pathname === "/api/research/start";
 
   const isProtectedApi = pathname.startsWith("/api/research") && !isGuestStreamApi;
   const isProtectedPage = pathname.startsWith("/workspace") && !isGuestWorkspace;

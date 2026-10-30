@@ -83,13 +83,9 @@ export function WorkspaceClient({
     }
   });
 
-  // Clean up pending investigation storage once mounted
+  // Retain pending investigation query in storage so reloads or stream reconnects preserve the query
   useEffect(() => {
-    try {
-      sessionStorage.removeItem("pending_investigation");
-    } catch {
-      // Ignore storage errors
-    }
+    // Keep pending session available during active exploration
   }, []);
 
   return (
