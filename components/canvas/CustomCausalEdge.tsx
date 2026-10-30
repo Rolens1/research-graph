@@ -103,15 +103,22 @@ function CustomCausalEdgeComponent({
             position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: "all",
+            zIndex: isHovered ? 1000 : 1,
           }}
-          className="nodrag nopan flex flex-col items-center select-none"
+          className={cn(
+            "nodrag nopan flex flex-col items-center select-none transition-all duration-150",
+            isHovered && "z-[1000]",
+          )}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           {/* Floating Explanation Tooltip on Hover */}
           {isHovered && explanation && (
             <div
-              className="absolute bottom-full mb-2 w-56 p-2.5 rounded-xl border border-border bg-popover/95 backdrop-blur-md text-popover-foreground shadow-glass text-[11px] font-sans leading-relaxed text-center z-50 animate-in fade-in-0 zoom-in-95 pointer-events-none"
+              className={cn(
+                "absolute w-64 p-3 rounded-xl border border-border-strong/80 bg-card/95 backdrop-blur-md text-foreground shadow-2xl text-[11px] font-sans leading-relaxed text-center z-[1000] animate-in fade-in-0 zoom-in-95 pointer-events-none",
+                labelY < 140 ? "top-full mt-2" : "bottom-full mb-2",
+              )}
               role="tooltip"
             >
               <div className="flex items-center justify-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
@@ -121,7 +128,7 @@ function CustomCausalEdgeComponent({
                   <span className="text-warning">· Disputed</span>
                 )}
               </div>
-              <p className="text-foreground/90">{explanation}</p>
+              <p className="text-foreground/90 font-normal">{explanation}</p>
             </div>
           )}
 
@@ -135,7 +142,6 @@ function CustomCausalEdgeComponent({
                   ? "bg-card text-foreground border-accent shadow-glass scale-105"
                   : "bg-card/90 backdrop-blur-xs text-muted-foreground border-border hover:border-border-strong hover:text-foreground",
             )}
-            title={explanation || labelText}
           >
             <RelationIcon
               className={cn(
