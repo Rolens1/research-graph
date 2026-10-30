@@ -163,7 +163,7 @@ async function buildHistoricalReplayStream(
     start(controller) {
       const sendEvent = (type: string, data: unknown) => {
         controller.enqueue(
-          encoder.encode(`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`),
+          encoder.encode(`data: ${JSON.stringify({ type, data })}\n\n`),
         );
       };
 
@@ -259,7 +259,7 @@ function buildLiveResearchStream(
       const sendSse = (event: SseEvent) => {
         if (isClosed) return;
         try {
-          const chunk = `event: ${event.type}\ndata: ${JSON.stringify(event.data)}\n\n`;
+          const chunk = `data: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(encoder.encode(chunk));
         } catch {
           // Stream controller closed by client

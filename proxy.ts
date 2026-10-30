@@ -30,9 +30,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/workspace", request.url));
   }
 
-  // 3. AC-4: Guard protected surfaces
-  const isProtectedApi = pathname.startsWith("/api/research");
-  const isProtectedPage = pathname.startsWith("/workspace");
+  // 3. AC-4: Guard protected surfaces (allow guest demo sessions without mandatory login)
+  const isGuestWorkspace =
+    pathname.startsWith("/workspace/guest_") ||
+    pathname.startsWith("/workspace/demo") ||
+    pathname === "/workspace/mock";
+
+  const isGuestStreamApi =
+    pathname.includes("/guest_") ||
+    pathname.includes("/demo") ||
+    pathname.includes("/mock/");
+
+  const isProtectedApi = pathname.startsWith("/api/research") && !isGuestStreamApi;
+  const isProtectedPage = pathname.startsWith("/workspace") && !isGuestWorkspace;
 
   if (!isAuthenticated) {
     if (isProtectedApi) {
