@@ -294,6 +294,16 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
     {
       id: "evt-2",
       researchId: "inv_red-sea-maritime-chokepoints-2024",
+      nodeId: "decision_bab-el-mandeb-blockade",
+      eventDate: "Dec 09, 2023",
+      parsedTimestamp: "2023-12-09T12:00:00.000Z",
+      title: "Passage Interdiction Mandate Declared",
+      description: "Naval operational command declares unilateral interdiction targeting commercial container vessels.",
+      sourceUrl: "https://www.ft.com",
+    },
+    {
+      id: "evt-3",
+      researchId: "inv_red-sea-maritime-chokepoints-2024",
       nodeId: "decision_operation-prosperity-guardian",
       eventDate: "Dec 18, 2023",
       parsedTimestamp: "2023-12-18T14:30:00.000Z",
@@ -302,7 +312,7 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       sourceUrl: "https://www.defense.gov",
     },
     {
-      id: "evt-3",
+      id: "evt-4",
       researchId: "inv_red-sea-maritime-chokepoints-2024",
       nodeId: "event_cape-good-hope-rerouting",
       eventDate: "Jan 15, 2024",
@@ -312,7 +322,7 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       sourceUrl: "https://www.wsj.com",
     },
     {
-      id: "evt-4",
+      id: "evt-5",
       researchId: "inv_red-sea-maritime-chokepoints-2024",
       nodeId: "dispute_insurance-war-risk-premiums",
       eventDate: "Feb 08, 2024",
@@ -320,6 +330,16 @@ export const MOCK_INVESTIGATION: MockInvestigationDataset = {
       title: "London Joint War Committee Re-rates Corridor",
       description: "Insurance underwriters expand designated high-risk area, pushing war risk rates past 1.0 percent.",
       sourceUrl: "https://www.bloomberg.com",
+    },
+    {
+      id: "evt-6",
+      researchId: "inv_red-sea-maritime-chokepoints-2024",
+      nodeId: "technology_ais-transponder-spoofing",
+      eventDate: "Mar 01, 2024",
+      parsedTimestamp: "2024-03-01T09:30:00.000Z",
+      title: "AIS Transponder Cloaking Deployment",
+      description: "Electronic countermeasures and spoofing methods deployed by vessels to obscure positioning data.",
+      sourceUrl: "https://www.lloydslist.com",
     },
   ],
   telemetry: [

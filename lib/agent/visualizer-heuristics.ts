@@ -92,27 +92,91 @@ export function assignHeuristicPathwayRoles(
 }
 
 /**
- * Extracts timeline events strictly for nodes whose entity type is event.
+ * Extracts chronological timeline milestones, breakthroughs, strategic decisions,
+ * and high-impact turning points from graph nodes.
  * Satisfies AC-6.
  */
 export function extractChronologicalTimelineEvents(
   nodes: GraphNodeData[],
   researchId: string,
 ): TimelineEvent[] {
-  const eventNodes = nodes.filter((n) => n.entityType === "event");
-  const timelineEvents: TimelineEvent[] = [];
+  // 1. Select candidate nodes: events, technological breakthroughs, decisions, disputes,
+  // or any high/critical impact nodes and nodes with explicit dates
+  const candidateNodes = nodes.filter((n) => {
+    // Explicit milestones, tech breakthroughs, and strategic decisions always qualify
+    if (n.entityType === "event" || n.entityType === "technology" || n.entityType === "decision") {
+      return true;
+    }
+    // High-impact or critical turning points qualify
+    if (n.impactLevel === "critical" || n.impactLevel === "high") {
+      return true;
+    }
+    // Disputes representing key milestones or re-ratings qualify
+    if (n.entityType === "dispute" && (n.timestamp || n.sources.some((s) => s.publishedDate))) {
+      return true;
+    }
+    // Any node with an explicit date or timestamp qualifies
+    if (n.timestamp && n.timestamp.trim().length > 0) {
+      return true;
+    }
+    return false;
+  });
 
-  for (const node of eventNodes) {
-    const rawDate = node.timestamp || "Historical Milestone";
+  const timelineEvents: TimelineEvent[] = [];
+  const seenNodeIds = new Set<string>();
+
+  for (const node of candidateNodes) {
+    if (seenNodeIds.has(node.id)) continue;
+    seenNodeIds.add(node.id);
+
+    let rawDate = node.timestamp?.trim() || "";
     let parsedTimestamp: string | undefined = undefined;
 
-    // Attempt ISO date normalization
-    const dateMatch = rawDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
-    if (dateMatch) {
-      const year = dateMatch[1];
-      const month = dateMatch[2] ? dateMatch[2].padStart(2, "0") : "01";
-      const day = dateMatch[3] ? dateMatch[3].padStart(2, "0") : "01";
+    // Check if timestamp contains a recognizable year (e.g., 2023, 2024, 1999)
+    const timestampMatch = rawDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
+    if (timestampMatch) {
+      const year = timestampMatch[1];
+      const month = timestampMatch[2] ? timestampMatch[2].padStart(2, "0") : "01";
+      const day = timestampMatch[3] ? timestampMatch[3].padStart(2, "0") : "01";
       parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
+    } else {
+      // Look for a publication date from sources (e.g., "2024-01-15")
+      const sourceWithDate = node.sources.find((s) => s.publishedDate && s.publishedDate.length >= 4);
+      if (sourceWithDate?.publishedDate) {
+        const srcMatch = sourceWithDate.publishedDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
+        if (srcMatch) {
+          const year = srcMatch[1];
+          const month = srcMatch[2] ? srcMatch[2].padStart(2, "0") : "01";
+          const day = srcMatch[3] ? srcMatch[3].padStart(2, "0") : "01";
+          parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
+          if (!rawDate || rawDate.length < 4) {
+            rawDate = sourceWithDate.publishedDate;
+          }
+        }
+      }
+
+      // Check summary for date pattern if still missing
+      if (!parsedTimestamp) {
+        const summaryMatch = node.summary.match(/\b(19\d\d|20\d\d)\b/);
+        if (summaryMatch) {
+          parsedTimestamp = `${summaryMatch[1]}-01-01T00:00:00.000Z`;
+          if (!rawDate || rawDate.length < 4) {
+            rawDate = summaryMatch[1];
+          }
+        }
+      }
+    }
+
+    if (!rawDate) {
+      if (node.entityType === "technology") {
+        rawDate = "Tech Breakthrough";
+      } else if (node.entityType === "decision") {
+        rawDate = "Strategic Decision";
+      } else if (node.entityType === "dispute") {
+        rawDate = "Active Dispute";
+      } else {
+        rawDate = "Historical Milestone";
+      }
     }
 
     timelineEvents.push({
