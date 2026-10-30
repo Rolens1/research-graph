@@ -1,12 +1,12 @@
-# Chronocause — Deep Research & Interactive Knowledge Engine
+# Causality-Search — Deep Research & Interactive Knowledge Engine
 
-Chronocause is an autonomous deep research platform that performs recursive multi-agent web investigations and renders verified findings into an interactive, causal knowledge graph and chronological timeline.
+Causality-Search is an autonomous deep research platform that performs recursive multi-agent web investigations and renders verified findings into an interactive, causal knowledge graph and chronological timeline.
 
 ---
 
 ## Architecture Overview
 
-Chronocause pairs autonomous AI inquiry loops with deterministic spatial visualization:
+Causality-Search pairs autonomous AI inquiry loops with deterministic spatial visualization:
 
 1. **Autonomous Multi-Agent Loop:**
    - **The Architect:** Decomposes complex queries into hypothesis trees and graph topology.

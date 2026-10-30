@@ -88,7 +88,7 @@ export function HomePage() {
 
           <div className="space-y-1.5">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground">
-              Chronocause
+              Causality-Search
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
               Autonomous causal event intelligence and verified knowledge graphs.

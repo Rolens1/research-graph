@@ -62,13 +62,13 @@ export function Breadcrumbs({ investigationTitle, className }: Props) {
       <Link
         href="/"
         className="flex items-center gap-2 group transition-opacity hover:opacity-90"
-        title="Chronocause Helm"
+        title="Causality-Search Helm"
       >
         <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-xs transition-transform group-hover:scale-105">
           <Compass className="h-4 w-4" />
         </div>
         <span className="font-semibold text-sm tracking-tight text-foreground font-sans hidden sm:inline">
-          Chronocause
+          Causality-Search
         </span>
       </Link>
 

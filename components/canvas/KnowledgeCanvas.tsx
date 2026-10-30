@@ -48,7 +48,7 @@ const edgeTypes: EdgeTypes = {
   constellationEdge: ConstellationEdge,
 };
 
-const STORAGE_KEY = "chronocause:canvas-view-mode";
+const STORAGE_KEY = "causality-search:canvas-view-mode";
 
 // 3. Type definitions
 type Props = {

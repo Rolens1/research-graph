@@ -24,8 +24,9 @@ export interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "chronocause_theme";
-const THEME_CHANGE_EVENT = "chronocause_theme_change";
+const STORAGE_KEY = "causality_search_theme";
+const LEGACY_STORAGE_KEY = "chronocause_theme";
+const THEME_CHANGE_EVENT = "causality_search_theme_change";
 
 function applyThemeToDOM(theme: Theme) {
   if (typeof document === "undefined") return;
@@ -51,7 +52,7 @@ function subscribeToTheme(callback: () => void) {
 
 function getThemeSnapshot(): Theme {
   try {
-    const cached = localStorage.getItem(STORAGE_KEY);
+    const cached = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (cached === "dark" || cached === "light") {
       return cached;
     }

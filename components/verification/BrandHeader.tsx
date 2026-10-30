@@ -14,7 +14,7 @@ type Props = {
 
 // 4. Component
 export function BrandHeader({
-  title = "Chronocause Expedition",
+  title = "Causality-Search Expedition",
   subtitle = "Age of Exploration & Nautical Causal Graph Engine",
   phaseLabel = "Nautical Cartography Engine Active",
   className,

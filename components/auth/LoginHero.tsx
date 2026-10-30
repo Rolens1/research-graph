@@ -72,7 +72,7 @@ export function LoginHero({ className = "" }: Props) {
       {/* Micro system status footer */}
       <div className="pt-6 border-t border-border flex items-center justify-between text-xs font-mono text-muted-foreground">
         <div className="flex items-center gap-2">
-          <span>CHRONOCAUSE SUITE v0.1.0</span>
+          <span>CAUSALITY-SEARCH SUITE v0.1.0</span>
         </div>
         <span>INSFORGE SECURED</span>
       </div>

@@ -72,7 +72,7 @@ export function InvestigationHeader({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `chronocause-dossier-${sessionId}.pdf`;
+      link.download = `causality-search-dossier-${sessionId}.pdf`;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);

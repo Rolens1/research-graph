@@ -61,7 +61,7 @@ function StarPresentationSlideComponent({
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-accent animate-ping" />
           <span className="text-xs font-mono uppercase tracking-wider font-semibold text-foreground/90">
-            Chronocause Cinematic Theater
+            Causality-Search Cinematic Theater
           </span>
           <span className="text-border">/</span>
           <span className="text-xs font-mono text-muted-foreground">

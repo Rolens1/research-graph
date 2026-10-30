@@ -60,7 +60,7 @@ export async function downloadInvestigationPdf(
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `chronocause-dossier-${sessionId.slice(0, 16)}.pdf`;
+    link.download = `causality-search-dossier-${sessionId.slice(0, 16)}.pdf`;
     document.body.appendChild(link);
     link.click();
     window.URL.revokeObjectURL(url);

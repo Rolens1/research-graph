@@ -19,7 +19,7 @@ export function LandingFooter({ className }: Props) {
       )}
     >
       <div className="flex items-center gap-2">
-        <span className="font-semibold text-foreground">Chronocause</span>
+        <span className="font-semibold text-foreground">Causality-Search</span>
         <span>&bull;</span>
         <span>Autonomous Causal Event Intelligence</span>
       </div>

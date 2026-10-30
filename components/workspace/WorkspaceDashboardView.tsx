@@ -22,7 +22,7 @@ type Props = {
   className?: string;
 };
 
-const VIEW_STORAGE_KEY = "chronocause_workspace_view";
+const VIEW_STORAGE_KEY = "causality_search_workspace_view";
 
 // 4. Component
 export function WorkspaceDashboardView({

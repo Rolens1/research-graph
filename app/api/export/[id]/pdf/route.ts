@@ -15,7 +15,7 @@ async function generatePdfResponse(reportPayload: ResearchSummaryPayload, id: st
   }) as unknown as React.ReactElement<DocumentProps>;
 
   const buffer = await renderToBuffer(element);
-  const safeFilename = `chronocause-dossier-${id.slice(0, 16)}.pdf`;
+  const safeFilename = `causality-search-dossier-${id.slice(0, 16)}.pdf`;
 
   return new Response(new Uint8Array(buffer), {
     status: 200,

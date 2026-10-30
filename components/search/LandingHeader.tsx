@@ -25,7 +25,7 @@ export function LandingHeader({ className }: Props) {
           <Sparkles className="h-3.5 w-3.5 text-accent" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm tracking-tight text-foreground">Chronocause</span>
+          <span className="font-semibold text-sm tracking-tight text-foreground">Causality-Search</span>
           <span className="text-[10px] font-mono text-muted-foreground px-2 py-0.5 rounded-full bg-muted border border-border/60">
             Event Intelligence
           </span>

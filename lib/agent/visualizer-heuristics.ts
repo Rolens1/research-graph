@@ -249,7 +249,7 @@ export function buildEnigmaNode(
     unresolvedQuestion: question,
     sources: [
       {
-        url: "https://research-graph.local/unresolved-enigma",
+        url: "https://causality-search.local/unresolved-enigma",
         title: "Unresolved Research Enigma",
         verbatimSnippet: "Exhausted maximum exploratory attempts without establishing a verified causal bridge.",
         credibilityScore: 30,

@@ -6,14 +6,14 @@ import { pdfStyles as styles } from "./pdf-styles";
 export function PdfReportDocument({ report }: { report: ResearchSummaryPayload }) {
   return (
     <Document
-      title={`Chronocause Dossier: ${report.query}`}
-      author="Chronocause AI Knowledge Engine"
+      title={`Causality-Search Dossier: ${report.query}`}
+      author="Causality-Search AI Knowledge Engine"
       subject="Executive Decision Briefing"
     >
       {/* PAGE 1: EXECUTIVE INTELLIGENCE OVERVIEW */}
       <Page size="A4" style={styles.page}>
         <View style={styles.masthead}>
-          <Text style={styles.mastheadKicker}>Chronocause Causal Intelligence Engine</Text>
+          <Text style={styles.mastheadKicker}>Causality-Search Causal Intelligence Engine</Text>
           <Text style={styles.mastheadTitle}>{report.query}</Text>
         </View>
 
@@ -58,7 +58,7 @@ export function PdfReportDocument({ report }: { report: ResearchSummaryPayload }
 
         <View style={styles.pageFooter} fixed>
           <Text style={styles.footerText}>
-            Chronocause Intelligence Platform • Decision Grade Causal Analysis
+            Causality-Search Intelligence Platform • Decision Grade Causal Analysis
           </Text>
           <Text style={styles.footerText}>Page 1 of 2</Text>
         </View>
@@ -102,7 +102,7 @@ export function PdfReportDocument({ report }: { report: ResearchSummaryPayload }
 
         <View style={styles.pageFooter} fixed>
           <Text style={styles.footerText}>
-            Chronocause Intelligence Platform • Primary Evidence Audit Trail
+            Causality-Search Intelligence Platform • Primary Evidence Audit Trail
           </Text>
           <Text style={styles.footerText}>Page 2 of 2</Text>
         </View>

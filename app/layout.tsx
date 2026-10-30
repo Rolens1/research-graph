@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chronocause — Deep Research & Interactive Knowledge Engine",
+  title: "Causality-Search — Deep Research & Interactive Knowledge Engine",
   description: "Recursive multi-agent research and causal knowledge engine.",
 };
 
@@ -35,7 +35,7 @@ export default function RootLayout({
           type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("chronocause_theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("causality_search_theme")||localStorage.getItem("chronocause_theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}}catch(e){}})();`,
           }}
         />
       </head>

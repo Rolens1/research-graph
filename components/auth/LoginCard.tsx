@@ -19,7 +19,7 @@ export function LoginCard({ redirectTo, className = "" }: Props) {
           </div>
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-card-foreground">
-              Sign in to Chronocause
+              Sign in to Causality-Search
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
               Select your identity provider to access your research sessions and causal knowledge graphs.
