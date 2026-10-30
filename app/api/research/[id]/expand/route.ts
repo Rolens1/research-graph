@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { expandRequestSchema, type ExpandResponse } from "@/types/expansion";
 import { executeRabbitHoleExpansion } from "@/lib/agent/rabbit-hole";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const rateLimit = await checkRateLimit(request, "expand_node");
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const { id: researchId } = await context.params;
     const body = await request.json();
     const parsed = expandRequestSchema.safeParse(body);

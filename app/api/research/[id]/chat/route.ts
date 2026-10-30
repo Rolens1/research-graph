@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamText } from "ai";
 import { getPrimaryLlmModel } from "@/lib/llm-provider";
 import { nodeChatRequestSchema } from "@/types/chat";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/rate-limit";
 import type { SourceCitation } from "@/types/graph";
 
 function buildSystemPrompt(nodeLabel: string, sources: SourceCitation[]): string {
@@ -63,6 +64,11 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const rateLimit = await checkRateLimit(request, "node_chat");
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     await context.params;
     const body = await request.json();
     const parsed = nodeChatRequestSchema.safeParse(body);
@@ -135,4 +141,3 @@ export async function POST(
     );
   }
 }
-

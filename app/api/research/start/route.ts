@@ -2,16 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getInsForgeServerClient } from "@/lib/insforge-server";
 import { startResearchRequestSchema } from "@/types/actions";
 import { startResearchExecution } from "@/lib/agent/stream-coordinator";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/research/start
  * Initializes a new research session and triggers background multi-agent investigation.
- * Satisfies AC-2.
+ * Satisfies AC-2 and AC-3.
  */
 export async function POST(req: NextRequest) {
   try {
+    const rateLimit = await checkRateLimit(req, "start_research");
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const rawBody = await req.json();
     const parseResult = startResearchRequestSchema.safeParse(rawBody);
 

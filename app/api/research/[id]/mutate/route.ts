@@ -5,6 +5,7 @@ import {
   verifyAndCreateHypothesisNode,
 } from "@/lib/agent/hypothesis-mutation";
 import { broadcastToResearch } from "@/lib/agent/stream-coordinator";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/rate-limit";
 import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
 import type { TelemetryActionType, AgentName } from "@/types/telemetry";
 
@@ -90,6 +91,11 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const rateLimit = await checkRateLimit(request, "mutate_hypothesis");
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const { id: researchId } = await context.params;
     const body = await request.json();
     const parsed = mutationRequestSchema.safeParse(body);
@@ -106,15 +112,11 @@ export async function POST(
     if (action === "exclude_node") {
       const { nodeId } = parsed.data.payload;
       const targetNode = existingNodes.find((n) => n.id === nodeId);
-      if (!targetNode && existingNodes.length > 0) {
-        return NextResponse.json({ error: `Node ${nodeId} not found` }, { status: 404 });
-      }
-
-      const breakage = evaluatePathBreakage(existingNodes, existingEdges, nodeId);
 
       await updateDbNodeExclusion(researchId, nodeId, true);
 
-      // Broadcast agent dialogue and telemetry thoughts
+      const breakage = evaluatePathBreakage(existingNodes, existingEdges, nodeId);
+
       breakage.agentThoughts.forEach((thought) => {
         broadcastDialogue(
           researchId,
