@@ -3,12 +3,18 @@ import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import React from "react";
 import { PdfReportDocument } from "@/components/export/PdfReportDocument";
 import { getResearchExportPayload } from "@/lib/export-data";
+import { checkRateLimit, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
+    const rateLimit = await checkRateLimit(_request, "export_pdf");
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const { id } = await context.params;
 
     if (!id) {
@@ -35,7 +41,8 @@ export async function GET(
       },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to compile PDF dossier";
+    // Mask internal error details from response body
+    const message = "Failed to compile PDF dossier. Please try again later.";
     console.error("[ExportPdfRoute] PDF generation failure:", error);
     return NextResponse.json({ error: message }, { status: 500 });
   }

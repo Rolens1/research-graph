@@ -5,7 +5,8 @@ export type RateLimitAction =
   | "start_research"
   | "expand_node"
   | "mutate_hypothesis"
-  | "node_chat";
+  | "node_chat"
+  | "export_pdf";
 
 export interface RateLimitPolicy {
   maxRequests: number;
@@ -31,6 +32,12 @@ export const RATE_LIMIT_CONFIG: Record<RateLimitAction, RateLimitPolicy> = {
     windowMs: 60 * 60 * 1000,
     errorMessage:
       "Hourly rate limit exceeded. You can perform up to 10 hypothesis mutations per hour. Please wait before submitting another change.",
+  },
+  export_pdf: {
+    maxRequests: 20,
+    windowMs: 60 * 60 * 1000,
+    errorMessage:
+      "Hourly rate limit exceeded. You can generate up to 20 PDF briefing dossiers per hour. Please wait before exporting another document.",
   },
   node_chat: {
     maxRequests: 20,
@@ -185,13 +192,21 @@ export async function checkRateLimit(
  * Creates a minimal HTTP 429 response when rate limit is exceeded
  */
 export function createRateLimitResponse(result: RateLimitResult): NextResponse {
+  const retryAfterSeconds = Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000));
   return NextResponse.json(
     {
       error:
         result.errorMessage ||
         "Hourly rate limit exceeded. Please wait before starting another inquiry.",
     },
-    { status: 429 },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": retryAfterSeconds.toString(),
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": Math.ceil(result.resetAt / 1000).toString(),
+      },
+    },
   );
 }
 
