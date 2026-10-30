@@ -1,7 +1,7 @@
 "use client";
 
 // 1. External imports
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { RefreshCw, WifiOff } from "lucide-react";
 
 // 2. Internal imports
@@ -60,22 +60,43 @@ export function InvestigationShell({
     initialConfidence: isMock ? MOCK_INVESTIGATION.confidenceScore : 0,
   });
 
-  // Active selections (derived fallback avoids cascading render effects)
+  // Active selections & bidirectional focus targets (Feature 24 / AC-1 to AC-5)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [focusNodeTarget, setFocusNodeTarget] = useState<{ nodeId: string; timestamp: number } | null>(null);
+  const [focusEventTarget, setFocusEventTarget] = useState<{ eventId: string; timestamp: number } | null>(null);
 
   const effectiveSelectedNodeId =
     selectedNodeId || stream.nodes[0]?.id || (isMock ? MOCK_INVESTIGATION.nodes[0]?.id : null) || null;
 
   const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
 
-  const handleSelectEvent = (eventId: string) => {
+  // Timeline Milestone Click -> Canvas Centering & Node Selection (AC-1, AC-5)
+  const handleSelectEvent = useCallback((eventId: string) => {
     setSelectedEventId(eventId);
     const event = stream.timelineEvents.find((e) => e.id === eventId);
     if (event?.nodeId) {
       setSelectedNodeId(event.nodeId);
+      setFocusNodeTarget({ nodeId: event.nodeId, timestamp: Date.now() });
     }
-  };
+  }, [stream.timelineEvents]);
+
+  // Canvas Node Click -> Timeline Auto Scroll & Milestone Selection (AC-3, AC-5)
+  const handleSelectNode = useCallback((nodeId: string | null) => {
+    setSelectedNodeId(nodeId);
+    if (!nodeId) {
+      setSelectedEventId(null);
+      return;
+    }
+    const matchingEvent = stream.timelineEvents.find((e) => e.nodeId === nodeId);
+    if (matchingEvent) {
+      setSelectedEventId(matchingEvent.id);
+      setFocusEventTarget({ eventId: matchingEvent.id, timestamp: Date.now() });
+    } else {
+      setSelectedEventId(null);
+    }
+  }, [stream.timelineEvents]);
 
   return (
     <InvestigationPlaybackProvider>
@@ -106,7 +127,9 @@ export function InvestigationShell({
             edges={stream.edges}
             isStreamCompleted={stream.status === "completed"}
             selectedNodeId={effectiveSelectedNodeId}
-            onSelectNode={setSelectedNodeId}
+            hoveredNodeId={hoveredNodeId}
+            focusNodeTarget={focusNodeTarget}
+            onSelectNode={handleSelectNode}
           />
 
           {/* Stale Connection & Retry Indicator (AC-7) */}
@@ -142,7 +165,10 @@ export function InvestigationShell({
           isOpen={isTimelineOpen}
           onToggle={() => setIsTimelineOpen(!isTimelineOpen)}
           selectedEventId={selectedEventId}
+          selectedNodeId={effectiveSelectedNodeId}
+          focusEventTarget={focusEventTarget}
           onSelectEvent={handleSelectEvent}
+          onHoverNode={setHoveredNodeId}
           isLoading={stream.isStreaming || stream.status === "connecting"}
         />
       </div>

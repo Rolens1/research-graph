@@ -1,7 +1,7 @@
 "use client";
 
 // 1. External imports
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -52,6 +52,8 @@ type Props = {
   nodes: MockGraphNode[];
   edges: MockGraphEdge[];
   selectedNodeId?: string | null;
+  hoveredNodeId?: string | null;
+  focusNodeTarget?: { nodeId: string; timestamp: number } | null;
   onSelectNode?: (nodeId: string) => void;
   viewMode?: CanvasViewMode;
   onViewModeChange?: (mode: CanvasViewMode) => void;
@@ -64,6 +66,8 @@ function KnowledgeCanvasContent({
   nodes,
   edges,
   selectedNodeId,
+  hoveredNodeId,
+  focusNodeTarget,
   onSelectNode,
   viewMode: propViewMode,
   onViewModeChange,
@@ -160,15 +164,43 @@ function KnowledgeCanvasContent({
     };
   }, [initialNodes, initialEdges, fitView, setFlowNodes, setFlowEdges]);
 
-  // Keep node selection updated without resetting manual node positions
+  // Keep node selection & timeline hover state updated with reference preservation for 60fps (AC-2)
   useEffect(() => {
     setFlowNodes((prev) =>
-      prev.map((node) => ({
-        ...node,
-        selected: node.id === selectedNodeId,
-      })),
+      prev.map((node) => {
+        const isSelected = node.id === selectedNodeId;
+        const isHovered = node.id === hoveredNodeId;
+        if (node.selected === isSelected && node.data?.isHovered === isHovered) {
+          return node;
+        }
+        return {
+          ...node,
+          selected: isSelected,
+          data: {
+            ...node.data,
+            isHovered,
+          },
+        };
+      }),
     );
-  }, [selectedNodeId, setFlowNodes]);
+  }, [selectedNodeId, hoveredNodeId, setFlowNodes]);
+
+  // Smooth camera centering upon fresh focusNodeTarget update from timeline milestone click (AC-1)
+  const lastHandledFocusTimestampRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focusNodeTarget?.nodeId || focusNodeTarget.timestamp === lastHandledFocusTimestampRef.current) return;
+    lastHandledFocusTimestampRef.current = focusNodeTarget.timestamp;
+
+    const targetNode = flowNodes.find((n) => n.id === focusNodeTarget.nodeId);
+    if (!targetNode) return;
+
+    const width = targetNode.measured?.width ?? (viewMode === "constellation" ? 72 : 250);
+    const height = targetNode.measured?.height ?? (viewMode === "constellation" ? 72 : 96);
+    const x = targetNode.position.x + width / 2;
+    const y = targetNode.position.y + height / 2;
+
+    setCenter(x, y, { duration: 600, zoom: 1.1 });
+  }, [focusNodeTarget, flowNodes, viewMode, setCenter]);
 
   // Dynamically update node and edge types when view mode changes while preserving coordinates
   useEffect(() => {

@@ -83,6 +83,7 @@ export const graphNodeDataSchema = z.object({
   parentNodeId: z.string().nullable().default(null),
   isUserAdded: z.boolean().default(false),
   isDisputed: z.boolean().default(false).optional(),
+  isHovered: z.boolean().optional(),
   impactLevel: impactLevelSchema.optional(),
   timestamp: z.string().optional(),
   backdropUrl: z.string().optional(),

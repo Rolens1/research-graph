@@ -69,6 +69,7 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
           : isEnigma
             ? "hover:border-entity-enigma hover:shadow-md"
             : "border-border/80 hover:border-accent/60 hover:shadow-xs",
+        data.isHovered && !selected && "border-primary ring-2 ring-primary/40 shadow-md scale-[1.02]",
       )}
       role="article"
       aria-label={`${data.entityType} node: ${data.label}`}

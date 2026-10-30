@@ -13,6 +13,8 @@ import { ENTITY_CONFIG } from "./TimelineEventCard";
 export type CollapsedTimelineRibbonProps = {
   events: MockTimelineEvent[];
   nodeTypeMap?: Map<string, EntityType>;
+  selectedEventId?: string | null;
+  selectedNodeId?: string | null;
   onToggle: () => void;
   className?: string;
 };
@@ -21,6 +23,8 @@ export type CollapsedTimelineRibbonProps = {
 export function CollapsedTimelineRibbon({
   events,
   nodeTypeMap,
+  selectedEventId,
+  selectedNodeId,
   onToggle,
   className,
 }: CollapsedTimelineRibbonProps) {
@@ -56,13 +60,19 @@ export function CollapsedTimelineRibbon({
                 ? (nodeTypeMap.get(evt.nodeId) as EntityType)
                 : "event";
             const dotClass = ENTITY_CONFIG[entityType]?.dotClass || "bg-entity-event";
+            const isDotActive =
+              evt.id === selectedEventId ||
+              Boolean(selectedNodeId && evt.nodeId === selectedNodeId);
 
             return (
               <span
                 key={evt.id}
                 title={`${evt.eventDate}: ${evt.title} (${entityType})`}
                 className={cn(
-                  "h-2 w-2 rounded-full opacity-80 hover:opacity-100 hover:scale-125 transition-transform",
+                  "rounded-full transition-all",
+                  isDotActive
+                    ? "h-2.5 w-2.5 ring-2 ring-primary ring-offset-1 ring-offset-background scale-125 opacity-100"
+                    : "h-2 w-2 opacity-80 hover:opacity-100 hover:scale-125",
                   dotClass,
                 )}
               />

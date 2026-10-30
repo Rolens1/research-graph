@@ -229,9 +229,29 @@ function ConstellationStarNodeComponent({ data, selected }: Props) {
             cy={cy}
             r={R * 1.6}
             fill={`url(#halo-${gradientId})`}
-            className="transition-transform duration-300 group-hover:scale-125"
+            className={cn(
+              "transition-transform duration-300 group-hover:scale-125",
+              data.isHovered && "scale-140 opacity-100",
+            )}
             style={{ transformOrigin: `${cx}px ${cy}px` }}
           />
+
+          {/* Timeline Card Hover Glow Beacon (AC-2) */}
+          {data.isHovered && !selected && (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={R + 7}
+              stroke={theme.starColor}
+              strokeWidth="1.5"
+              fill="none"
+              opacity="0.85"
+              className="animate-pulse"
+              style={{
+                transformOrigin: `${cx}px ${cy}px`,
+              }}
+            />
+          )}
 
           {/* Celestial Selection Orbit Ring */}
           {selected && (

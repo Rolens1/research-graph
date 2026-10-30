@@ -13,7 +13,9 @@ export type TimelineEventCardProps = {
   event: MockTimelineEvent;
   index: number;
   isSelected: boolean;
+  isLinkedToSelectedNode?: boolean;
   onSelect?: (id: string) => void;
+  onHover?: (nodeId: string | null) => void;
   linkedEntityType?: EntityType;
   className?: string;
 };
@@ -71,11 +73,14 @@ export function TimelineEventCard({
   event,
   index,
   isSelected,
+  isLinkedToSelectedNode,
   onSelect,
+  onHover,
   linkedEntityType = "event",
   className,
 }: TimelineEventCardProps) {
   const config = ENTITY_CONFIG[linkedEntityType] || ENTITY_CONFIG.event;
+  const isActive = isSelected || Boolean(isLinkedToSelectedNode);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -90,12 +95,14 @@ export function TimelineEventCard({
       role="button"
       tabIndex={0}
       onClick={() => onSelect?.(event.id)}
+      onMouseEnter={() => onHover?.(event.nodeId ?? null)}
+      onMouseLeave={() => onHover?.(null)}
       onKeyDown={handleKeyDown}
       aria-label={`Milestone: ${event.title}, date ${event.eventDate}`}
       className={cn(
         "min-w-[230px] max-w-[250px] h-full p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between shrink-0 shadow-2xs group outline-none select-none focus-visible:ring-2 focus-visible:ring-primary",
-        isSelected
-          ? "border-primary ring-1 ring-primary/40 bg-card shadow-xs"
+        isActive
+          ? "border-primary ring-2 ring-primary ring-offset-2 ring-offset-background bg-card shadow-xs"
           : "border-border/70 hover:border-accent/40 bg-card/90 hover:bg-card",
         className,
       )}

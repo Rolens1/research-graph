@@ -23,7 +23,10 @@ export type ChronoTimelineProps = {
   isOpen: boolean;
   onToggle: () => void;
   selectedEventId?: string | null;
+  selectedNodeId?: string | null;
+  focusEventTarget?: { eventId: string; timestamp: number } | null;
   onSelectEvent?: (eventId: string) => void;
+  onHoverNode?: (nodeId: string | null) => void;
   isLoading?: boolean;
   className?: string;
 };
@@ -35,7 +38,10 @@ export function ChronoTimeline({
   isOpen,
   onToggle,
   selectedEventId,
+  selectedNodeId,
+  focusEventTarget,
   onSelectEvent,
+  onHoverNode,
   isLoading = false,
   className,
 }: ChronoTimelineProps) {
@@ -79,10 +85,7 @@ export function ChronoTimeline({
   }, []);
 
   const handleScroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const offset = direction === "left" ? -280 : 280;
-      scrollContainerRef.current.scrollBy({ left: offset, behavior: "smooth" });
-    }
+    scrollContainerRef.current?.scrollBy({ left: direction === "left" ? -280 : 280, behavior: "smooth" });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -95,8 +98,7 @@ export function ChronoTimeline({
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDraggingRef.current || !scrollContainerRef.current) return;
     e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5;
+    const walk = (e.pageX - scrollContainerRef.current.offsetLeft - startXRef.current) * 1.5;
     scrollContainerRef.current.scrollLeft = scrollLeftRef.current - walk;
   };
 
@@ -104,12 +106,38 @@ export function ChronoTimeline({
     isDraggingRef.current = false;
   };
 
+  // Auto scroll to target event card when focusEventTarget changes (AC-3)
+  useEffect(() => {
+    if (!focusEventTarget?.eventId || !isOpen) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const animId = requestAnimationFrame(() => {
+      const cardElement = document.getElementById(`timeline-card-${focusEventTarget.eventId}`);
+      if (!cardElement) return;
+
+      const cardLeft = cardElement.offsetLeft;
+      const cardWidth = cardElement.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      const targetScrollLeft = cardLeft - containerWidth / 2 + cardWidth / 2;
+
+      container.scrollTo({
+        left: Math.max(0, targetScrollLeft),
+        behavior: "smooth",
+      });
+    });
+
+    return () => cancelAnimationFrame(animId);
+  }, [focusEventTarget, isOpen]);
+
   // Collapsed Ribbon View (AC-1, AC-7)
   if (!isOpen) {
     return (
       <CollapsedTimelineRibbon
         events={sortedEvents}
         nodeTypeMap={nodeTypeMap}
+        selectedEventId={selectedEventId}
+        selectedNodeId={selectedNodeId}
         onToggle={onToggle}
         className={className}
       />
@@ -199,14 +227,16 @@ export function ChronoTimeline({
           </div>
         )}
 
-        {/* Chronological Milestone Cards (AC-2, AC-3, AC-5) */}
+        {/* Chronological Milestone Cards (AC-2, AC-3, AC-4, AC-5) */}
         {sortedEvents.map((event, idx) => (
           <TimelineEventCard
             key={event.id}
             event={event}
             index={idx}
             isSelected={selectedEventId === event.id}
+            isLinkedToSelectedNode={Boolean(selectedNodeId && event.nodeId === selectedNodeId)}
             onSelect={onSelectEvent}
+            onHover={onHoverNode}
             linkedEntityType={event.nodeId ? nodeTypeMap.get(event.nodeId) : "event"}
           />
         ))}
