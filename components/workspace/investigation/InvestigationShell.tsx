@@ -14,6 +14,7 @@ import { ChronoTimeline } from "@/components/timeline/ChronoTimeline";
 import { NodeInspectorDrawer } from "@/components/inspector/NodeInspectorDrawer";
 import { InvestigationPlaybackProvider } from "@/components/telemetry/InvestigationPlaybackContext";
 import { useInvestigationStream } from "@/hooks/useInvestigationStream";
+import { useHypothesisMutation } from "@/hooks/useHypothesisMutation";
 import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
 
 // 3. Type definitions
@@ -71,10 +72,17 @@ export function InvestigationShell({
 
   const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
 
+  // User Hypothesis Mutation Engine (Feature 29)
+  const mutation = useHypothesisMutation({
+    sessionId,
+    baseNodes: stream.nodes,
+    baseEdges: stream.edges,
+  });
+
   // Selected node entity lookup
   const selectedNode = React.useMemo(
-    () => stream.nodes.find((n) => n.id === selectedNodeId) || null,
-    [stream.nodes, selectedNodeId],
+    () => mutation.displayNodes.find((n) => n.id === selectedNodeId) || null,
+    [mutation.displayNodes, selectedNodeId],
   );
 
   // Timeline Milestone Click -> Canvas Centering & Node Selection (AC-1, AC-5)
@@ -132,14 +140,20 @@ export function InvestigationShell({
         <div className="flex-1 flex overflow-hidden w-full relative">
           {/* Zone 1: The Causal Canvas */}
           <KnowledgeCanvas
-            nodes={stream.nodes}
-            edges={stream.edges}
+            nodes={mutation.displayNodes}
+            edges={mutation.displayEdges}
             isStreamCompleted={stream.status === "completed"}
             selectedNodeId={selectedNodeId}
             hoveredNodeId={hoveredNodeId}
             focusNodeTarget={focusNodeTarget}
             onSelectNode={handleSelectNode}
             onOpenDrawer={() => setIsInspectorDrawerOpen(true)}
+            onExcludeNode={mutation.handleExcludeNode}
+            onRestoreNode={mutation.handleRestoreNode}
+            onAddHypothesis={mutation.handleAddHypothesis}
+            onExploreRabbitHole={(n) => {
+              console.log("[RabbitHole] Requested inquiry for node:", n.id);
+            }}
           />
 
           {/* Stale Connection & Retry Indicator (AC-7) */}
@@ -147,7 +161,7 @@ export function InvestigationShell({
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 border border-amber-500/40 shadow-xl backdrop-blur-md">
               <WifiOff className="w-4 h-4 text-amber-400" />
               <span className="text-xs font-mono text-muted-foreground">
-                Stream disconnected. Showing {stream.nodes.length} cached nodes.
+                Stream disconnected. Showing {mutation.displayNodes.length} cached nodes.
               </span>
               <button
                 type="button"
@@ -170,8 +184,8 @@ export function InvestigationShell({
           {/* Feature 25: Node Inspector Drawer (Right Slide-Out) */}
           <NodeInspectorDrawer
             node={selectedNode}
-            nodes={stream.nodes}
-            edges={stream.edges}
+            nodes={mutation.displayNodes}
+            edges={mutation.displayEdges}
             isOpen={isInspectorDrawerOpen}
             onClose={() => {
               setIsInspectorDrawerOpen(false);
@@ -179,6 +193,8 @@ export function InvestigationShell({
               setSelectedEventId(null);
             }}
             onSelectNode={handleSelectNode}
+            onExcludeNode={(n) => mutation.handleExcludeNode(n.id)}
+            onRestoreNode={(n) => mutation.handleRestoreNode(n.id)}
             onExploreRabbitHole={(n) => {
               console.log("[RabbitHole] Requested inquiry for node:", n.id);
             }}

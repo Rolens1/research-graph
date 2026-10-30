@@ -120,6 +120,7 @@ function ConstellationStarNodeComponent({ data, selected }: Props) {
     <div
       className={cn(
         "relative flex flex-col items-center justify-center min-w-[120px] max-w-[160px] p-1 select-none group cursor-pointer transition-transform duration-200",
+        data.isExcluded && "opacity-45 grayscale-[50%]",
         selected && "scale-105",
       )}
       role="button"

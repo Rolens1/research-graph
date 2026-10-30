@@ -16,7 +16,7 @@ import {
   type EdgeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Compass, Layers } from "lucide-react";
+import { Compass, Layers, Sparkles } from "lucide-react";
 
 // 2. Internal imports
 import { cn } from "@/lib/utils";
@@ -31,8 +31,11 @@ import { StarPresentationSlide } from "./StarPresentationSlide";
 import { CustomCausalEdge } from "./CustomCausalEdge";
 import { ConstellationEdge } from "./ConstellationEdge";
 import { CanvasSvgMarkers } from "./CanvasSvgMarkers";
+import { NodeContextMenu } from "./NodeContextMenu";
+import { AddHypothesisModal } from "./AddHypothesisModal";
 import type { MockGraphNode, MockGraphEdge } from "@/lib/mock-investigation";
 import type { GraphNodeData } from "@/types/graph";
+import type { AddNodePayload } from "@/types/mutation";
 
 // Defined outside render cycle to avoid canvas re-mounting
 const nodeTypes: NodeTypes = {
@@ -59,6 +62,10 @@ type Props = {
   viewMode?: CanvasViewMode;
   onViewModeChange?: (mode: CanvasViewMode) => void;
   isStreamCompleted?: boolean;
+  onExcludeNode?: (nodeId: string) => void;
+  onRestoreNode?: (nodeId: string) => void;
+  onAddHypothesis?: (payload: AddNodePayload) => Promise<void>;
+  onExploreRabbitHole?: (node: GraphNodeData) => void;
   className?: string;
 };
 
@@ -74,11 +81,23 @@ function KnowledgeCanvasContent({
   viewMode: propViewMode,
   onViewModeChange,
   isStreamCompleted,
+  onExcludeNode,
+  onRestoreNode,
+  onAddHypothesis,
+  onExploreRabbitHole,
   className,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const [isLocked, setIsLocked] = useState(false);
   const [isRealigning, setIsRealigning] = useState(false);
+
+  // Context Menu & Add Hypothesis Modal States (Feature 29)
+  const [contextMenu, setContextMenu] = useState<{
+    node: GraphNodeData;
+    position: { x: number; y: number };
+  } | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddingHypothesis, setIsAddingHypothesis] = useState(false);
 
   // Trigger smooth cinematic fitView animation upon stream completion (AC-5)
   useEffect(() => {
@@ -292,6 +311,34 @@ function KnowledgeCanvasContent({
     onSelectNode?.(null);
   }, [onSelectNode]);
 
+  // Handle right-clicking a node opens custom context menu (AC-2)
+  const handleNodeContextMenu: NodeMouseHandler = useCallback(
+    (event, node) => {
+      event.preventDefault();
+      const targetNode = nodes.find((n) => n.id === node.id);
+      if (targetNode) {
+        setContextMenu({
+          node: targetNode,
+          position: { x: event.clientX, y: event.clientY },
+        });
+      }
+    },
+    [nodes],
+  );
+
+  const handleSubmitHypothesis = useCallback(
+    async (payload: AddNodePayload) => {
+      if (!onAddHypothesis) return;
+      setIsAddingHypothesis(true);
+      try {
+        await onAddHypothesis(payload);
+      } finally {
+        setIsAddingHypothesis(false);
+      }
+    },
+    [onAddHypothesis],
+  );
+
   return (
     <div
       className={cn(
@@ -347,6 +394,7 @@ function KnowledgeCanvasContent({
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         onNodeDoubleClick={handleNodeDoubleClick}
+        onNodeContextMenu={handleNodeContextMenu}
         onPaneClick={handleCloseInspector}
         panOnDrag={!isLocked && !activePresentationNodeId}
         zoomOnScroll={!isLocked && !activePresentationNodeId}
@@ -413,6 +461,45 @@ function KnowledgeCanvasContent({
           hasNext={currentSlideIndex < presentationNodes.length - 1}
         />
       )}
+      {/* Top Right Floating Action: Add Hypothesis Button (AC-1) */}
+      {!activePresentationNodeId && onAddHypothesis && (
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card/90 backdrop-blur-md border border-border/80 hover:border-accent text-xs font-mono font-semibold text-foreground hover:text-accent shadow-glass transition-all cursor-pointer"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+            <span>+ Add Hypothesis</span>
+          </button>
+        </div>
+      )}
+
+      {/* Context Menu on Node Right Click (AC-2) */}
+      <NodeContextMenu
+        node={contextMenu?.node || null}
+        position={contextMenu?.position || null}
+        onClose={() => setContextMenu(null)}
+        onExcludeNode={(n) => onExcludeNode?.(n.id)}
+        onRestoreNode={(n) => onRestoreNode?.(n.id)}
+        onExploreRabbitHole={(n) => {
+          onSelectNode?.(n.id);
+          onExploreRabbitHole?.(n);
+        }}
+        onInspectNode={(n) => {
+          onSelectNode?.(n.id);
+          onOpenDrawer?.();
+        }}
+      />
+
+      {/* Add Hypothesis Modal (AC-1) */}
+      <AddHypothesisModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleSubmitHypothesis}
+        existingNodes={nodes}
+        isSubmitting={isAddingHypothesis}
+      />
     </div>
   );
 }

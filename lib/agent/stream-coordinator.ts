@@ -342,3 +342,13 @@ export function cancelResearchExecution(researchId: string): boolean {
 export function getActiveResearchRun(researchId: string): ActiveResearchRun | undefined {
   return activeRuns.get(researchId);
 }
+
+/**
+ * Broadcast an external event (e.g. user hypothesis mutation) to an active research stream.
+ */
+export function broadcastToResearch(researchId: string, event: SseEvent): boolean {
+  const run = activeRuns.get(researchId);
+  if (!run) return false;
+  broadcastEvent(run, event);
+  return true;
+}

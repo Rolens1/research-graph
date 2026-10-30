@@ -72,6 +72,7 @@ export function adaptMockToReactFlow(
         depthLevel: node.depthLevel,
         parentNodeId: node.parentNodeId,
         isUserAdded: node.isUserAdded,
+        isExcluded: Boolean(node.isExcluded),
         isDisputed: node.isDisputed ?? (node.entityType === "dispute"),
         impactLevel,
         timestamp: node.timestamp ?? "00:00",
@@ -98,6 +99,7 @@ export function adaptMockToReactFlow(
       relationType: edge.relationType,
       label: edge.label,
       isDisputed: edge.isDisputed,
+      isSevered: Boolean(edge.isSevered),
       explanation: edge.explanation,
     },
     style: {

@@ -7,6 +7,8 @@ import {
   Compass,
   AlertTriangle,
   HelpCircle,
+  EyeOff,
+  RotateCcw,
 } from "lucide-react";
 
 // 2. Internal imports
@@ -26,6 +28,8 @@ type Props = {
   onClose: () => void;
   onSelectNode: (nodeId: string) => void;
   onExploreRabbitHole?: (node: GraphNodeData) => void;
+  onExcludeNode?: (node: GraphNodeData) => void;
+  onRestoreNode?: (node: GraphNodeData) => void;
   className?: string;
 };
 
@@ -38,6 +42,8 @@ function NodeInspectorDrawerComponent({
   onClose,
   onSelectNode,
   onExploreRabbitHole,
+  onExcludeNode,
+  onRestoreNode,
   className,
 }: Props) {
   useEffect(() => {
@@ -78,20 +84,54 @@ function NodeInspectorDrawerComponent({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
-          title="Close drawer (Esc)"
-          aria-label="Close drawer"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {node && !node.isExcluded && onExcludeNode && (
+            <button
+              type="button"
+              onClick={() => onExcludeNode(node)}
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors cursor-pointer"
+              title="Exclude from Causal Chain"
+              aria-label="Exclude node"
+            >
+              <EyeOff className="h-3.5 w-3.5" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
+            title="Close drawer (Esc)"
+            aria-label="Close drawer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Scrollable Content Body */}
       {node && (
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+          {/* Excluded Banner with Restore Action (AC-9) */}
+          {node.isExcluded && (
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex items-center justify-between gap-3 animate-in fade-in-0 duration-150">
+              <div className="flex items-center gap-2 text-xs font-mono text-destructive">
+                <EyeOff className="h-4 w-4 shrink-0" />
+                <span>Excluded from active causal chain.</span>
+              </div>
+              {onRestoreNode && (
+                <button
+                  type="button"
+                  onClick={() => onRestoreNode(node)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Restore</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Header & Badges & Confidence Meter */}
           <NodeInspectorHeader node={node} />
 

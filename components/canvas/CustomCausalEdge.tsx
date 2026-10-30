@@ -52,18 +52,21 @@ function CustomCausalEdgeComponent({
 
   const relationType: RelationType = data?.relationType || "causes";
   const isDisputed = Boolean(data?.isDisputed);
+  const isSevered = Boolean(data?.isSevered);
   const labelText = data?.label || relationType;
   const explanation = data?.explanation;
   const RelationIcon = relationIcons[relationType] || ArrowRight;
 
   // Determine stroke color and arrowhead marker
-  const strokeColor = isDisputed
+  const strokeColor = isSevered
     ? "var(--color-warning)"
-    : isHovered || selected
-      ? "var(--color-accent)"
-      : "var(--color-border-strong)";
+    : isDisputed
+      ? "var(--color-warning)"
+      : isHovered || selected
+        ? "var(--color-accent)"
+        : "var(--color-border-strong)";
 
-  const markerId = isDisputed
+  const markerId = isSevered || isDisputed
     ? "causal-arrow-disputed"
     : isHovered || selected
       ? "causal-arrow-active"
@@ -89,9 +92,9 @@ function CustomCausalEdgeComponent({
         style={{
           stroke: strokeColor,
           strokeWidth: isHovered ? 2.5 : 1.5,
-          strokeDasharray: isDisputed ? "6 4" : undefined,
+          strokeDasharray: isSevered ? "4 4" : isDisputed ? "6 4" : undefined,
           transition: "stroke 0.2s ease, stroke-width 0.2s ease",
-          animation: isDisputed ? "causalDash 1.2s linear infinite" : undefined,
+          animation: isSevered || isDisputed ? "causalDash 1.2s linear infinite" : undefined,
         }}
         markerEnd={`url(#${markerId})`}
       />
@@ -124,11 +127,15 @@ function CustomCausalEdgeComponent({
               <div className="flex items-center justify-center gap-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
                 <RelationIcon className="h-2.5 w-2.5 text-accent" />
                 <span>{relationType}</span>
-                {isDisputed && (
+                {isSevered ? (
+                  <span className="text-warning">· Path Severed</span>
+                ) : isDisputed ? (
                   <span className="text-warning">· Disputed</span>
-                )}
+                ) : null}
               </div>
-              <p className="text-foreground/90 font-normal">{explanation}</p>
+              <p className="text-foreground/90 font-normal">
+                {isSevered ? (explanation || "Causal path severed due to excluded upstream entity.") : explanation}
+              </p>
             </div>
           )}
 
@@ -136,11 +143,13 @@ function CustomCausalEdgeComponent({
           <div
             className={cn(
               "inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-mono font-medium transition-all cursor-pointer shadow-xs",
-              isDisputed
-                ? "bg-warning/15 text-warning border-warning/40 hover:bg-warning/25"
-                : isHovered || selected
-                  ? "bg-card text-foreground border-accent shadow-glass scale-105"
-                  : "bg-card/90 backdrop-blur-xs text-muted-foreground border-border hover:border-border-strong hover:text-foreground",
+              isSevered
+                ? "bg-warning/20 text-warning border-warning/50 hover:bg-warning/30"
+                : isDisputed
+                  ? "bg-warning/15 text-warning border-warning/40 hover:bg-warning/25"
+                  : isHovered || selected
+                    ? "bg-card text-foreground border-accent shadow-glass scale-105"
+                    : "bg-card/90 backdrop-blur-xs text-muted-foreground border-border hover:border-border-strong hover:text-foreground",
             )}
           >
             <RelationIcon

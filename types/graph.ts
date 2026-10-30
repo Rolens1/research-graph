@@ -82,6 +82,7 @@ export const graphNodeDataSchema = z.object({
   depthLevel: z.number().int().min(0).default(0), // 0 = root causality, 1+ = rabbit hole
   parentNodeId: z.string().nullable().default(null),
   isUserAdded: z.boolean().default(false),
+  isExcluded: z.boolean().default(false).optional(),
   isDisputed: z.boolean().default(false).optional(),
   isHovered: z.boolean().optional(),
   impactLevel: impactLevelSchema.optional(),
@@ -104,6 +105,7 @@ export const graphEdgeDataSchema = z.object({
   relationType: relationTypeSchema,
   label: z.string().min(1).max(50), // Displayed on the connecting arrow
   isDisputed: z.boolean().default(false), // True if sources contradict each other
+  isSevered: z.boolean().default(false).optional(), // True if connected to an excluded node
   explanation: z.string().min(10).max(250),
 });
 export type GraphEdgeData = z.infer<typeof graphEdgeDataSchema>;

@@ -14,7 +14,7 @@ export type TelemetryActionType =
   | "goal_reached";
 
 export type MockSourceCitation = {
-  id: string;
+  id?: string;
   url: string;
   title: string;
   publishedDate?: string;
@@ -31,6 +31,7 @@ export type MockGraphNode = {
   depthLevel: number;
   parentNodeId: string | null;
   isUserAdded: boolean;
+  isExcluded?: boolean;
   isDisputed?: boolean;
   impactLevel?: "critical" | "high" | "medium" | "low";
   timestamp?: string;
@@ -48,6 +49,7 @@ export type MockGraphEdge = {
   relationType: RelationType;
   label: string;
   isDisputed: boolean;
+  isSevered?: boolean;
   explanation: string;
 };
 

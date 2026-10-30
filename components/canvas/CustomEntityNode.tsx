@@ -18,6 +18,8 @@ import {
   AlertCircle,
   HelpCircle,
   GitBranch,
+  Sparkles,
+  EyeOff,
 } from "lucide-react";
 
 // 2. Internal imports
@@ -53,6 +55,8 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
   const isEnigma = data.entityType === "enigma" || Boolean(data.unresolvedQuestion);
   const isHighConfidence = data.confidence >= 85;
   const isDisputed = Boolean(data.isDisputed || data.entityType === "dispute");
+  const isExcluded = Boolean(data.isExcluded);
+  const isUserAdded = Boolean(data.isUserAdded);
   const sourceCount = data.sources?.length ?? 0;
   const badgeClass = entityBadgeStyles[data.entityType] || entityBadgeStyles.actor;
   const EntityIcon = entityIcons[data.entityType] || Users;
@@ -61,14 +65,15 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
     <div
       className={cn(
         "w-[250px] min-h-[96px] rounded-xl border bg-card p-3 shadow-xs transition-all relative flex flex-col justify-between space-y-2 select-none group",
-        isEnigma && "border-dashed border-entity-enigma/70 bg-entity-enigma-bg/15 shadow-sm",
+        isExcluded && "opacity-55 grayscale-[30%] border-dashed border-destructive/60 bg-muted/40",
+        isEnigma && !isExcluded && "border-dashed border-entity-enigma/70 bg-entity-enigma-bg/15 shadow-sm",
         selected
           ? isEnigma
             ? "border-entity-enigma ring-2 ring-entity-enigma/40 shadow-glass"
             : "border-primary ring-2 ring-primary/30 shadow-glass"
           : isEnigma
             ? "hover:border-entity-enigma hover:shadow-md"
-            : "border-border/80 hover:border-accent/60 hover:shadow-xs",
+            : !isExcluded && "border-border/80 hover:border-accent/60 hover:shadow-xs",
         data.isHovered && !selected && "border-primary ring-2 ring-primary/40 shadow-md scale-[1.02]",
       )}
       role="article"
@@ -119,6 +124,28 @@ function CustomEntityNodeComponent({ data, selected }: Props) {
             <EntityIcon className="h-2.5 w-2.5" />
             <span>{data.entityType}</span>
           </span>
+
+          {/* User Hypothesis Badge */}
+          {isUserAdded && (
+            <span
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border text-[9px] font-mono font-semibold bg-accent/15 text-accent border-accent/40 shrink-0"
+              title="User-formulated hypothesis"
+            >
+              <Sparkles className="h-2 w-2" />
+              <span>Hypothesis</span>
+            </span>
+          )}
+
+          {/* Excluded Badge */}
+          {isExcluded && (
+            <span
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border text-[9px] font-mono font-semibold bg-destructive/15 text-destructive border-destructive/40 shrink-0"
+              title="Excluded from active causal chain"
+            >
+              <EyeOff className="h-2 w-2" />
+              <span>Excluded</span>
+            </span>
+          )}
 
           {/* Contested Beacon */}
           {isDisputed && (
