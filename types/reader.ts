@@ -80,7 +80,7 @@ export type ReaderOutput = z.infer<typeof readerOutputSchema>;
  * Reader Input Options Schema
  */
 export const readerInputSchema = z.object({
-  subQueries: z.array(backwardSubQuerySchema).min(1).max(4),
+  subQueries: z.array(backwardSubQuerySchema).min(0).max(4),
   existingGraphKeywords: z.array(z.string()).default([]),
   includeFullContent: z.boolean().default(false),
   preferredProvider: z.string().optional(),

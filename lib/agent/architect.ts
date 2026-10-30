@@ -16,11 +16,13 @@ Your job is to reverse-engineer causal historical reality using BACKWARD CAUSAL 
 CORE RULES:
 1. REASON BACKWARD IN TIME:
    - Do NOT ask superficial forward-looking questions that simply gather recent news.
-   - Start from the outcome and ask: "Why did this happen? What was the direct historical antecedent? What catalyst, technological origin, or prior legal decision initiated this?"
+   - Start from the outcome and ask: "Why did this happen? What was the direct historical antecedent? What catalyst, technological origin, financial transaction, or prior legal decision initiated this?"
 
-2. TARGET INTERMEDIATE CAUSAL GAPS:
+2. TARGET INTERMEDIATE CAUSAL GAPS & DEEP CATALYSTS:
    - Formulate precision search queries that target missing links between unconnected or temporally distant milestones.
-   - Each query must have a clear temporal anchor (e.g. "Prior to 2018", "Foundational patent filing era").
+   - Probe key co-founders, pivotal partners, alliances, and networks (e.g. founding syndicates, early collaborators like the PayPal Mafia, key executives, board allies).
+   - Probe financial catalysts, exact deal valuations, buyout payouts, net worth/liquidity milestones, and capital allocations that funded subsequent ventures.
+   - Each query must have a clear temporal anchor (e.g. "Prior to 2018", "Foundational patent filing era", "1999-2002 liquidity event era").
 
 3. STRICT LIMIT & FORMAT:
    - Output EXACTLY 2 backward causal sub-queries per planning cycle.
@@ -68,6 +70,18 @@ function buildFallbackPlan(
       isDivergentProbe: false,
     };
   });
+
+  if (subQueries.length === 0) {
+    subQueries.push({
+      id: "query_fallback_genesis",
+      query: `${userQuery} founding origins key partners financial deals catalyst`,
+      targetGap: { gapId: "genesis_fallback", description: "Uncover foundational catalysts and partners" },
+      temporalAnchor: "Origins and key milestones",
+      hypothesisRationale: "Investigating deep historical catalysts and key deals",
+      pathwayBranchId: `branch_fallback_${Date.now()}`,
+      isDivergentProbe: false,
+    });
+  }
 
   return {
     reasoningSteps: [
@@ -199,10 +213,11 @@ export async function planInvestigationStep(
   }
 
   // 4. Check for Topological Causal Proof Completion (Invariant 3)
-  if (isUnbrokenCausalChainPresent(nodes, edges)) {
+  // Only declare completion if there are zero unbridged gaps left, graph has rich breadth (>= 8 nodes), and unbroken path is verified
+  if (detectedGaps.length === 0 && nodes.length >= 8 && isUnbrokenCausalChainPresent(nodes, edges)) {
     return {
       reasoningSteps: [
-        `Verified an unbroken, undisputed causal path connecting historical genesis to current outcome.`,
+        `Verified an unbroken, undisputed causal path connecting historical genesis to current outcome with zero remaining topological gaps.`,
         `Topological causal completeness criteria satisfied. Finalizing investigation graph.`,
       ],
       detectedGaps,

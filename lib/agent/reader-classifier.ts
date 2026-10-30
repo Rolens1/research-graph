@@ -40,16 +40,17 @@ const CLASSIFICATION_SYSTEM_PROMPT = `You are "The Reader", an analytical intell
 
 STRICT INSTRUCTIONS:
 1. ENTITY TYPES:
-   - "actor": Organization, government body, leader, or corporate founder.
-   - "event": Historical incident, summit, launch, market crash, or treaty.
-   - "technology": Specific patent, battery chemistry, hardware, or technical method.
-   - "decision": Regulatory ruling, corporate pivot, investment, or legal choice.
-   - "dispute": Contested claim, sanctions battle, trade dispute, or legal conflict.
+   - "actor": Organization, government body, leader, co-founder, investor, founding syndicate, or network ally (e.g. PayPal Mafia members, early business partners).
+   - "event": Historical incident, launch, acquisition, buyout, liquidity event, IPO, or merger.
+   - "technology": Specific patent, software platform, battery chemistry, hardware, or technical method.
+   - "decision": Capital investment, buyout payout, corporate pivot, equity allocation, or legal choice.
+   - "dispute": Contested claim, board coup, sanctions battle, trade dispute, or legal conflict.
 
 2. ACCURACY & EVIDENCE:
    - Only extract entities and facts directly supported by the provided search snippets.
    - Every entity and fact MUST reference an exact "sourceUrl" from the input.
    - Extract a real, verbatim quote fragment (at least 15 characters) for "quoteSnippet".
+   - Include specific financial metrics ($ valuations, acquisition amounts, cash payouts) and co-founders/collaborators in entity summaries and statements whenever present.
 
 3. STRICT LIMITS:
    - Output at most 6 high-relevance entities.

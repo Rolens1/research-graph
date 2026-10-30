@@ -36,6 +36,18 @@ export async function executeReaderInvestigation(
   const { subQueries, existingGraphKeywords, includeFullContent, preferredProvider } =
     validatedInput;
 
+  if (subQueries.length === 0) {
+    reasoningSteps.push("No sub-queries requested for this cycle.");
+    return {
+      queryResults: [],
+      allEntities: [],
+      allFacts: [],
+      allRabbitHoles: [],
+      reasoningSteps,
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
   reasoningSteps.push(
     `Received ${subQueries.length} backward sub-queries from The Architect. Initializing parallel search dispatch.`,
   );

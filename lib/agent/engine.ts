@@ -76,6 +76,15 @@ export async function* runMasterResearchLoop(
       const subQueriesToSearch = plan.subQueries.slice(0, 3);
       state.totalQueriesExecuted += subQueriesToSearch.length;
 
+      // If the architect declared the investigation complete or produced 0 sub-queries,
+      // conclude gracefully without dispatching an empty search pass
+      if (plan.isInvestigationComplete || subQueriesToSearch.length === 0) {
+        state.status = "completed";
+        state.completionReason = plan.completionReason || "Investigation reached topological completeness.";
+        yield createAgentThought("Architect", "Causal path verified with no further queries required. Finalizing synthesis.");
+        break;
+      }
+
       // 2. Reconnaissance: The Reader
       yield createAgentThought("Reader", `Cycle ${state.iteration}: Sounding sources across ${subQueriesToSearch.length} search queries.`);
       const readerResult = await executeReaderInvestigation(
