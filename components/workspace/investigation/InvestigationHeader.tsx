@@ -1,6 +1,5 @@
 "use client";
 
-// 1. External imports
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -13,12 +12,10 @@ import {
   AlertCircle,
   Copy,
   Check,
+  Loader2,
 } from "lucide-react";
-
-// 2. Internal imports
 import { cn } from "@/lib/utils";
 
-// 3. Type definitions
 type Props = {
   sessionId: string;
   query: string;
@@ -33,7 +30,6 @@ type Props = {
   className?: string;
 };
 
-// 4. Component
 export function InvestigationHeader({
   sessionId,
   query,
@@ -48,10 +44,7 @@ export function InvestigationHeader({
   className,
 }: Props) {
   const [copied, setCopied] = useState(false);
-
-  const isRunning = status === "running";
-  const isCompleted = status === "completed";
-  const isFailed = status === "failed";
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleCopyLink = async () => {
     try {
@@ -62,6 +55,32 @@ export function InvestigationHeader({
       }
     } catch {
       // Ignore clipboard permission errors
+    }
+  };
+
+  const handleExport = async () => {
+    if (onExportPdf) {
+      onExportPdf();
+      return;
+    }
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const res = await fetch(`/api/export/${sessionId}/pdf`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `chronocause-dossier-${sessionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch {
+      window.open(`/api/export/${sessionId}/pdf`, "_blank");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -87,15 +106,12 @@ export function InvestigationHeader({
             <span>Chart</span>
             <span className="text-border">/</span>
           </div>
-
           <h1
             className="text-xs md:text-sm font-semibold text-foreground truncate font-sans max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-lg"
             title={query || "Uncharted Investigation"}
           >
             {query || "Uncharted Investigation"}
           </h1>
-
-          {/* Depth pill */}
           <span
             className={cn(
               "hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium uppercase tracking-wider border shrink-0",
@@ -119,32 +135,28 @@ export function InvestigationHeader({
           <span
             className={cn(
               "h-2 w-2 rounded-full shrink-0",
-              confidenceScore >= 85
-                ? "bg-entity-technology animate-pulse"
-                : "bg-entity-decision",
+              confidenceScore >= 85 ? "bg-entity-technology animate-pulse" : "bg-entity-decision",
             )}
           />
           <span className="text-[11px] font-mono text-muted-foreground">Confidence:</span>
-          <span className="text-xs font-mono font-bold text-foreground">
-            {confidenceScore}%
-          </span>
+          <span className="text-xs font-mono font-bold text-foreground">{confidenceScore}%</span>
         </div>
 
         {/* Status Pill */}
         <div className="flex items-center">
-          {isRunning && (
+          {status === "running" && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-accent/15 text-accent border border-accent/40 shadow-xs">
               <Compass className="h-3 w-3 animate-spin shrink-0" />
               <span className="hidden md:inline">Sounding</span>
             </span>
           )}
-          {isCompleted && (
+          {status === "completed" && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-entity-technology-bg text-entity-technology-foreground border border-entity-technology shadow-xs">
               <CheckCircle2 className="h-3 w-3 shrink-0" />
               <span className="hidden md:inline">Verified</span>
             </span>
           )}
-          {isFailed && (
+          {status === "failed" && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-destructive/15 text-destructive border border-destructive/40 shadow-xs">
               <AlertCircle className="h-3 w-3 shrink-0" />
               <span className="hidden md:inline">Halted</span>
@@ -152,18 +164,17 @@ export function InvestigationHeader({
           )}
         </div>
 
-        {/* Panel View Toggles Group */}
+        {/* Panel View Toggles */}
         <div
           role="group"
           aria-label="Panel Visibility Controls"
           className="flex items-center p-0.5 rounded-xl bg-muted/60 border border-border/80 shadow-xs"
         >
-          {/* Timeline toggle */}
           <button
             type="button"
             onClick={onToggleTimeline}
             aria-pressed={isTimelineOpen}
-            title={isTimelineOpen ? "Hide Chrono Timeline (Zone 3)" : "Show Chrono Timeline (Zone 3)"}
+            title={isTimelineOpen ? "Hide Chrono Timeline" : "Show Chrono Timeline"}
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer",
               isTimelineOpen
@@ -174,13 +185,11 @@ export function InvestigationHeader({
             <Clock className="h-3.5 w-3.5" />
             <span className="hidden lg:inline text-[11px]">Timeline</span>
           </button>
-
-          {/* Terminal toggle */}
           <button
             type="button"
             onClick={onToggleTerminal}
             aria-pressed={isTerminalOpen}
-            title={isTerminalOpen ? "Hide Live Terminal (Zone 2)" : "Show Live Terminal (Zone 2)"}
+            title={isTerminalOpen ? "Hide Live Terminal" : "Show Live Terminal"}
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer",
               isTerminalOpen
@@ -193,41 +202,27 @@ export function InvestigationHeader({
           </button>
         </div>
 
-        {/* Copy Link button */}
+        {/* Copy Link */}
         <button
           type="button"
           onClick={handleCopyLink}
           className="h-8 w-8 rounded-xl border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shadow-xs"
           title="Copy investigation URL to clipboard"
         >
-          {copied ? (
-            <Check className="h-3.5 w-3.5 text-entity-technology" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          )}
+          {copied ? <Check className="h-3.5 w-3.5 text-entity-technology" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
 
         {/* Export PDF Button */}
-        {onExportPdf ? (
-          <button
-            type="button"
-            onClick={onExportPdf}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-          >
-            <FileDown className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export PDF</span>
-          </button>
-        ) : (
-          <a
-            href={`/api/export/${sessionId}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-          >
-            <FileDown className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Export PDF</span>
-          </a>
-        )}
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer shadow-xs disabled:opacity-60"
+          title="Download Executive Decision Dossier"
+        >
+          {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{isExporting ? "Compiling..." : "Export PDF"}</span>
+        </button>
       </div>
     </header>
   );
