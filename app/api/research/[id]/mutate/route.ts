@@ -6,6 +6,26 @@ import {
 } from "@/lib/agent/hypothesis-mutation";
 import { broadcastToResearch } from "@/lib/agent/stream-coordinator";
 import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
+import type { TelemetryActionType, AgentName } from "@/types/telemetry";
+
+function broadcastDialogue(
+  researchId: string,
+  agentName: AgentName,
+  message: string,
+  actionType: TelemetryActionType = "fact_extracted",
+) {
+  broadcastToResearch(researchId, {
+    type: "agent_dialogue",
+    data: {
+      id: "log_" + Math.random().toString(36).substring(2, 10),
+      researchId,
+      agentName,
+      message,
+      actionType,
+      timestamp: new Date().toISOString(),
+    },
+  });
+}
 
 async function updateDbNodeExclusion(
   researchId: string,
@@ -96,17 +116,12 @@ export async function POST(
 
       // Broadcast agent dialogue and telemetry thoughts
       breakage.agentThoughts.forEach((thought) => {
-        broadcastToResearch(researchId, {
-          type: "agent_dialogue",
-          data: {
-            id: "log_" + Math.random().toString(36).substring(2, 10),
-            researchId,
-            agentName: "The Fact Checker",
-            message: thought,
-            actionType: breakage.pathBroken ? "conflict_raised" : "confidence_update",
-            timestamp: new Date().toISOString(),
-          },
-        });
+        broadcastDialogue(
+          researchId,
+          "The Fact Checker",
+          thought,
+          breakage.pathBroken ? "conflict_raised" : "confidence_update",
+        );
       });
 
       const response: MutationResponse = {
@@ -130,17 +145,7 @@ export async function POST(
       await updateDbNodeExclusion(researchId, nodeId, false);
 
       const restoreThought = `The Fact Checker: Restored node "${targetNode?.label || nodeId}" to causal chain. Reconnecting severed pathways.`;
-      broadcastToResearch(researchId, {
-        type: "agent_dialogue",
-        data: {
-          id: "log_" + Math.random().toString(36).substring(2, 10),
-          researchId,
-          agentName: "The Fact Checker",
-          message: restoreThought,
-          actionType: "fact_extracted",
-          timestamp: new Date().toISOString(),
-        },
-      });
+      broadcastDialogue(researchId, "The Fact Checker", restoreThought, "fact_extracted");
 
       const response: MutationResponse = {
         success: true,
@@ -168,17 +173,7 @@ export async function POST(
 
         // Broadcast to stream coordinator
         agentThoughts.forEach((thought) => {
-          broadcastToResearch(researchId, {
-            type: "agent_dialogue",
-            data: {
-              id: "log_" + Math.random().toString(36).substring(2, 10),
-              researchId,
-              agentName: "The Reader",
-              message: thought,
-              actionType: "fact_extracted",
-              timestamp: new Date().toISOString(),
-            },
-          });
+          broadcastDialogue(researchId, "The Reader", thought, "fact_extracted");
         });
 
         broadcastToResearch(researchId, {

@@ -158,8 +158,8 @@ export function InvestigationShell({
 
           {/* Stale Connection & Retry Indicator (AC-7) */}
           {stream.isStale && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 border border-amber-500/40 shadow-xl backdrop-blur-md">
-              <WifiOff className="w-4 h-4 text-amber-400" />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2 rounded-full bg-card/95 border border-warning/40 shadow-xl backdrop-blur-md">
+              <WifiOff className="w-4 h-4 text-warning" />
               <span className="text-xs font-mono text-muted-foreground">
                 Stream disconnected. Showing {mutation.displayNodes.length} cached nodes.
               </span>

@@ -133,7 +133,7 @@ export function NodeContextMenu({
           <button
             type="button"
             onClick={handleRestore}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-emerald-500/10 text-emerald-400 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-success/15 text-success transition-colors cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span>Restore to Causal Chain</span>

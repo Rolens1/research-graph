@@ -123,7 +123,7 @@ function NodeInspectorDrawerComponent({
                 <button
                   type="button"
                   onClick={() => onRestoreNode(node)}
-                  className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-success/20 text-success border border-success/40 hover:bg-success/30 transition-colors shrink-0 cursor-pointer flex items-center gap-1"
                 >
                   <RotateCcw className="h-3 w-3" />
                   <span>Restore</span>
@@ -199,7 +199,7 @@ function NodeInspectorDrawerComponent({
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-mono font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-all duration-200 shadow-sm cursor-pointer"
             >
               <Compass className="h-4 w-4" />
-              <span>Explore Rabbit Hole Drill-Down</span>
+              <span>Explore Rabbit Hole Drill Down</span>
             </button>
             <p className="text-[10px] font-mono text-center text-muted-foreground mt-1.5">
               Launch recursive inquiry to investigate child causal mechanisms

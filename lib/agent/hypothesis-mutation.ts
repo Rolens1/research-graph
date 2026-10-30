@@ -9,6 +9,32 @@ export interface PathBreakageResult {
   agentThoughts: string[];
 }
 
+function buildAdjacencyList(edges: GraphEdgeData[]): Map<string, string[]> {
+  const adj = new Map<string, string[]>();
+  for (const edge of edges) {
+    const list = adj.get(edge.source) || [];
+    list.push(edge.target);
+    adj.set(edge.source, list);
+  }
+  return adj;
+}
+
+function getReachableNodes(adj: Map<string, string[]>, startId: string): Set<string> {
+  const reachable = new Set<string>([startId]);
+  const queue: string[] = [startId];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const neighbors = adj.get(current) || [];
+    for (const neighbor of neighbors) {
+      if (!reachable.has(neighbor)) {
+        reachable.add(neighbor);
+        queue.push(neighbor);
+      }
+    }
+  }
+  return reachable;
+}
+
 /**
  * Evaluates whether excluding an entity breaks causal connectivity between genesis actors and terminal outcomes.
  * Satisfies AC-4.
@@ -26,7 +52,7 @@ export function evaluatePathBreakage(
     .filter((e) => e.source === excludedNodeId || e.target === excludedNodeId)
     .map((e) => e.id);
 
-  // 2. Filter active nodes and edges (excluding the target and already excluded nodes)
+  // 2. Active subgraph without the excluded node
   const activeNodes = nodes.filter((n) => n.id !== excludedNodeId && !n.isExcluded);
   const activeNodeIds = new Set(activeNodes.map((n) => n.id));
 
@@ -42,59 +68,42 @@ export function evaluatePathBreakage(
   // 3. Find genesis nodes (in-degree 0) and terminal nodes (out-degree 0 or critical impact)
   const inDegreeMap = new Map<string, number>();
   const outDegreeMap = new Map<string, number>();
-  activeNodes.forEach((n) => {
-    inDegreeMap.set(n.id, 0);
-    outDegreeMap.set(n.id, 0);
-  });
+  for (const node of activeNodes) {
+    inDegreeMap.set(node.id, 0);
+    outDegreeMap.set(node.id, 0);
+  }
 
-  activeEdges.forEach((e) => {
-    inDegreeMap.set(e.target, (inDegreeMap.get(e.target) || 0) + 1);
-    outDegreeMap.set(e.source, (outDegreeMap.get(e.source) || 0) + 1);
-  });
+  for (const edge of activeEdges) {
+    inDegreeMap.set(edge.target, (inDegreeMap.get(edge.target) || 0) + 1);
+    outDegreeMap.set(edge.source, (outDegreeMap.get(edge.source) || 0) + 1);
+  }
 
   const genesisNodes = activeNodes.filter((n) => (inDegreeMap.get(n.id) || 0) === 0);
   const terminalNodes = activeNodes.filter(
     (n) => (outDegreeMap.get(n.id) || 0) === 0 || n.impactLevel === "critical",
   );
 
-  // Build adjacency list for active edges
-  const adj = new Map<string, string[]>();
-  activeEdges.forEach((e) => {
-    const list = adj.get(e.source) || [];
-    list.push(e.target);
-    adj.set(e.source, list);
-  });
+  // 4. Adjacency graphs: original topology vs active remaining topology
+  const originalEdges = edges.filter((e) => !e.isSevered);
+  const originalAdj = buildAdjacencyList(originalEdges);
+  const activeAdj = buildAdjacencyList(activeEdges);
 
-  // 4. Test connectivity from genesis to terminal
+  // Terminals reachable from the excluded node in the original topology
+  const terminalsFromExcluded = getReachableNodes(originalAdj, excludedNodeId);
+
+  // 5. Test if any genesis-to-terminal continuity depended on the excluded node
   let pathBroken = false;
   const brokenPairs: { genesis: string; terminal: string }[] = [];
 
-  for (const g of genesisNodes) {
-    const reachable = new Set<string>();
-    const queue: string[] = [g.id];
-    reachable.add(g.id);
+  for (const genesis of genesisNodes) {
+    const reachedExcludedOriginally = getReachableNodes(originalAdj, genesis.id).has(excludedNodeId);
+    if (!reachedExcludedOriginally) continue;
 
-    while (queue.length > 0) {
-      const curr = queue.shift()!;
-      const neighbors = adj.get(curr) || [];
-      for (const n of neighbors) {
-        if (!reachable.has(n)) {
-          reachable.add(n);
-          queue.push(n);
-        }
-      }
-    }
-
-    for (const t of terminalNodes) {
-      if (g.id !== t.id && !reachable.has(t.id)) {
-        // Was there a path through the excluded node originally?
-        const originallyConnected = edges.some(
-          (e) => (e.source === g.id || e.source === excludedNodeId) && (e.target === t.id || e.target === excludedNodeId),
-        );
-        if (originallyConnected || severedEdgeIds.length > 0) {
-          pathBroken = true;
-          brokenPairs.push({ genesis: g.label, terminal: t.label });
-        }
+    const reachableInActive = getReachableNodes(activeAdj, genesis.id);
+    for (const terminal of terminalNodes) {
+      if (terminalsFromExcluded.has(terminal.id) && !reachableInActive.has(terminal.id)) {
+        pathBroken = true;
+        brokenPairs.push({ genesis: genesis.label, terminal: terminal.label });
       }
     }
   }
