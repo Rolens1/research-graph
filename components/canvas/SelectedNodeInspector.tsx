@@ -92,6 +92,18 @@ function SelectedNodeInspectorComponent({
   onDeepDive,
   className,
 }: Props) {
+  // Close inspector on Escape key (registered before early return to satisfy rules of hooks)
+  React.useEffect(() => {
+    if (!node) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [node, onClose]);
+
   if (!node) return null;
 
   const impact = node.impactLevel ?? "medium";
@@ -146,14 +158,15 @@ function SelectedNodeInspectorComponent({
         <button
           type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            onClose?.();
+            onClose();
           }}
-          className="h-6 w-6 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer"
-          title="Deselect star"
+          className="h-7 w-7 -mr-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+          title="Deselect star (Esc)"
           aria-label="Close inspector"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 

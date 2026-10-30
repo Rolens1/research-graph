@@ -92,14 +92,28 @@ export async function persistIterationState(
 
     // 4. Upsert Chronological Timeline Events
     if (state.timelineEvents.length > 0) {
-      const timelineRecords = state.timelineEvents.map((event) => ({
-        research_id: state.researchId,
-        node_id: event.nodeId || null,
-        event_date: event.eventDate,
-        parsed_timestamp: event.parsedTimestamp ? Number(event.parsedTimestamp) : null,
-        title: event.title,
-        description: event.description,
-      }));
+      const timelineRecords = state.timelineEvents.map((event) => {
+        let parsedTime: number | null = null;
+        if (event.parsedTimestamp) {
+          const directNum = Number(event.parsedTimestamp);
+          if (!isNaN(directNum) && directNum > 0) {
+            parsedTime = directNum;
+          } else {
+            const parsedMs = new Date(event.parsedTimestamp).getTime();
+            if (!isNaN(parsedMs)) {
+              parsedTime = parsedMs;
+            }
+          }
+        }
+        return {
+          research_id: state.researchId,
+          node_id: event.nodeId || null,
+          event_date: event.eventDate,
+          parsed_timestamp: parsedTime,
+          title: event.title,
+          description: event.description,
+        };
+      });
 
       try {
         await insforge.database

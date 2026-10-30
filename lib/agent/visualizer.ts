@@ -189,9 +189,16 @@ export async function executeVisualizer(
       }
     }
 
-    // 6. Timeline Event Filtering (AC-6)
-    const timelineEvents = extractChronologicalTimelineEvents(canonicalNodes, input.researchId);
-    logThought(`[Visualizer] Curated ${timelineEvents.length} chronological milestones for Zone 3 Chrono Timeline.`);
+    // 6. Timeline Event Filtering across entire accumulated graph (AC-6)
+    const allEvaluationNodes = [
+      ...(input.existingNodes || []),
+      ...canonicalNodes,
+    ];
+    const uniqueEvaluationNodes = Array.from(
+      new Map(allEvaluationNodes.map((n) => [n.id, n])).values(),
+    );
+    const timelineEvents = extractChronologicalTimelineEvents(uniqueEvaluationNodes, input.researchId);
+    logThought(`[Visualizer] Curated ${timelineEvents.length} chronological milestones across graph for Zone 3 Chrono Timeline.`);
 
     // 7. Enigma Mystery Synthesis (AC-7)
     const enigmaNodes: GraphNodeData[] = [];

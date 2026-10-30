@@ -173,7 +173,11 @@ export function InvestigationShell({
             nodes={stream.nodes}
             edges={stream.edges}
             isOpen={isInspectorDrawerOpen}
-            onClose={() => setIsInspectorDrawerOpen(false)}
+            onClose={() => {
+              setIsInspectorDrawerOpen(false);
+              setSelectedNodeId(null);
+              setSelectedEventId(null);
+            }}
             onSelectNode={handleSelectNode}
             onExploreRabbitHole={(n) => {
               console.log("[RabbitHole] Requested inquiry for node:", n.id);

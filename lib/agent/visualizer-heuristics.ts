@@ -92,6 +92,54 @@ export function assignHeuristicPathwayRoles(
 }
 
 /**
+ * Extracts a recognizable historical date string and ISO timestamp from node properties,
+ * sources, or summary statements.
+ */
+function extractNodeDateInfo(node: GraphNodeData): { rawDate: string; parsedTimestamp?: string } {
+  let rawDate = node.timestamp?.trim() || "";
+  let parsedTimestamp: string | undefined = undefined;
+
+  // 1. Check if timestamp has an explicit year (e.g. "2002", "2024-01-15")
+  const tsMatch = rawDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
+  if (tsMatch) {
+    const year = tsMatch[1];
+    const month = tsMatch[2] ? tsMatch[2].padStart(2, "0") : "01";
+    const day = tsMatch[3] ? tsMatch[3].padStart(2, "0") : "01";
+    parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
+    return { rawDate, parsedTimestamp };
+  }
+
+  // 2. Check sources for publication dates
+  const sourceWithDate = node.sources?.find((s) => s.publishedDate && s.publishedDate.length >= 4);
+  if (sourceWithDate?.publishedDate) {
+    const srcMatch = sourceWithDate.publishedDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
+    if (srcMatch) {
+      const year = srcMatch[1];
+      const month = srcMatch[2] ? srcMatch[2].padStart(2, "0") : "01";
+      const day = srcMatch[3] ? srcMatch[3].padStart(2, "0") : "01";
+      parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
+      if (!rawDate || rawDate.length < 4) {
+        rawDate = sourceWithDate.publishedDate;
+      }
+      return { rawDate, parsedTimestamp };
+    }
+  }
+
+  // 3. Scan summary for date patterns (e.g. "in 2002", "founded 2004", "1999 sale")
+  const summaryMatch = node.summary?.match(/\b(19\d\d|20\d\d)\b/);
+  if (summaryMatch) {
+    const year = summaryMatch[1];
+    parsedTimestamp = `${year}-01-01T00:00:00.000Z`;
+    if (!rawDate || rawDate.length < 4) {
+      rawDate = year;
+    }
+    return { rawDate, parsedTimestamp };
+  }
+
+  return { rawDate, parsedTimestamp };
+}
+
+/**
  * Extracts chronological timeline milestones, breakthroughs, strategic decisions,
  * and high-impact turning points from graph nodes.
  * Satisfies AC-6.
@@ -100,23 +148,25 @@ export function extractChronologicalTimelineEvents(
   nodes: GraphNodeData[],
   researchId: string,
 ): TimelineEvent[] {
-  // 1. Select candidate nodes: events, technological breakthroughs, decisions, disputes,
-  // or any high/critical impact nodes and nodes with explicit dates
+  // 1. Select candidate nodes:
+  // - All technological breakthroughs (technology)
+  // - All strategic decisions (decision)
+  // - All historical milestones (event)
+  // - All active disputes (dispute)
+  // - All critical or high-impact turning points (e.g. critical inflections, pivotal founders)
+  // - Any node that has a recognizable temporal anchor in timestamp, sources, or summary
   const candidateNodes = nodes.filter((n) => {
-    // Explicit milestones, tech breakthroughs, and strategic decisions always qualify
     if (n.entityType === "event" || n.entityType === "technology" || n.entityType === "decision") {
       return true;
     }
-    // High-impact or critical turning points qualify
     if (n.impactLevel === "critical" || n.impactLevel === "high") {
       return true;
     }
-    // Disputes representing key milestones or re-ratings qualify
-    if (n.entityType === "dispute" && (n.timestamp || n.sources.some((s) => s.publishedDate))) {
+    if (n.entityType === "dispute") {
       return true;
     }
-    // Any node with an explicit date or timestamp qualifies
-    if (n.timestamp && n.timestamp.trim().length > 0) {
+    const dateInfo = extractNodeDateInfo(n);
+    if (dateInfo.parsedTimestamp || (dateInfo.rawDate && dateInfo.rawDate.trim().length > 0)) {
       return true;
     }
     return false;
@@ -129,64 +179,33 @@ export function extractChronologicalTimelineEvents(
     if (seenNodeIds.has(node.id)) continue;
     seenNodeIds.add(node.id);
 
-    let rawDate = node.timestamp?.trim() || "";
-    let parsedTimestamp: string | undefined = undefined;
+    const { rawDate: extractedDate, parsedTimestamp } = extractNodeDateInfo(node);
+    let finalDate = extractedDate;
 
-    // Check if timestamp contains a recognizable year (e.g., 2023, 2024, 1999)
-    const timestampMatch = rawDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
-    if (timestampMatch) {
-      const year = timestampMatch[1];
-      const month = timestampMatch[2] ? timestampMatch[2].padStart(2, "0") : "01";
-      const day = timestampMatch[3] ? timestampMatch[3].padStart(2, "0") : "01";
-      parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
-    } else {
-      // Look for a publication date from sources (e.g., "2024-01-15")
-      const sourceWithDate = node.sources.find((s) => s.publishedDate && s.publishedDate.length >= 4);
-      if (sourceWithDate?.publishedDate) {
-        const srcMatch = sourceWithDate.publishedDate.match(/\b(19\d\d|20\d\d)(?:[-/.](\d{1,2}))?(?:[-/.](\d{1,2}))?\b/);
-        if (srcMatch) {
-          const year = srcMatch[1];
-          const month = srcMatch[2] ? srcMatch[2].padStart(2, "0") : "01";
-          const day = srcMatch[3] ? srcMatch[3].padStart(2, "0") : "01";
-          parsedTimestamp = `${year}-${month}-${day}T00:00:00.000Z`;
-          if (!rawDate || rawDate.length < 4) {
-            rawDate = sourceWithDate.publishedDate;
-          }
-        }
-      }
-
-      // Check summary for date pattern if still missing
-      if (!parsedTimestamp) {
-        const summaryMatch = node.summary.match(/\b(19\d\d|20\d\d)\b/);
-        if (summaryMatch) {
-          parsedTimestamp = `${summaryMatch[1]}-01-01T00:00:00.000Z`;
-          if (!rawDate || rawDate.length < 4) {
-            rawDate = summaryMatch[1];
-          }
-        }
-      }
-    }
-
-    if (!rawDate) {
+    if (!finalDate) {
       if (node.entityType === "technology") {
-        rawDate = "Tech Breakthrough";
+        finalDate = "Tech Breakthrough";
       } else if (node.entityType === "decision") {
-        rawDate = "Strategic Decision";
+        finalDate = "Strategic Decision";
       } else if (node.entityType === "dispute") {
-        rawDate = "Active Dispute";
+        finalDate = "Active Dispute";
+      } else if (node.impactLevel === "critical") {
+        finalDate = "Critical Turning Point";
+      } else if (node.impactLevel === "high") {
+        finalDate = "Major Development";
       } else {
-        rawDate = "Historical Milestone";
+        finalDate = "Historical Milestone";
       }
     }
 
     timelineEvents.push({
       researchId,
       nodeId: node.id,
-      eventDate: rawDate,
+      eventDate: finalDate,
       parsedTimestamp,
       title: node.label.slice(0, 80),
       description: node.summary.slice(0, 300),
-      sourceUrl: node.sources[0]?.url,
+      sourceUrl: node.sources?.[0]?.url,
     });
   }
 
