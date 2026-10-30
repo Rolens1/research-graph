@@ -55,6 +55,7 @@ type Props = {
   hoveredNodeId?: string | null;
   focusNodeTarget?: { nodeId: string; timestamp: number } | null;
   onSelectNode?: (nodeId: string | null) => void;
+  onOpenDrawer?: () => void;
   viewMode?: CanvasViewMode;
   onViewModeChange?: (mode: CanvasViewMode) => void;
   isStreamCompleted?: boolean;
@@ -69,6 +70,7 @@ function KnowledgeCanvasContent({
   hoveredNodeId,
   focusNodeTarget,
   onSelectNode,
+  onOpenDrawer,
   viewMode: propViewMode,
   onViewModeChange,
   isStreamCompleted,
@@ -391,6 +393,7 @@ function KnowledgeCanvasContent({
           <SelectedNodeInspector
             node={selectedNodeData}
             onClose={handleCloseInspector}
+            onOpenContext={onOpenDrawer}
             onDeepDive={(node) => handleOpenPresentation(node.id)}
           />
         </div>

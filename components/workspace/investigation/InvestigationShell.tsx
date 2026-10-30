@@ -11,6 +11,7 @@ import { InvestigationHeader } from "./InvestigationHeader";
 import { KnowledgeCanvas } from "@/components/canvas/KnowledgeCanvas";
 import { LiveTerminal } from "@/components/telemetry/LiveTerminal";
 import { ChronoTimeline } from "@/components/timeline/ChronoTimeline";
+import { NodeInspectorDrawer } from "@/components/inspector/NodeInspectorDrawer";
 import { InvestigationPlaybackProvider } from "@/components/telemetry/InvestigationPlaybackContext";
 import { useInvestigationStream } from "@/hooks/useInvestigationStream";
 import type { InvestigationStreamStatus } from "@/lib/investigation-stream-helpers";
@@ -64,10 +65,17 @@ export function InvestigationShell({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [isInspectorDrawerOpen, setIsInspectorDrawerOpen] = useState(false);
   const [focusNodeTarget, setFocusNodeTarget] = useState<{ nodeId: string; timestamp: number } | null>(null);
   const [focusEventTarget, setFocusEventTarget] = useState<{ eventId: string; timestamp: number } | null>(null);
 
   const headerStatus = resolveHeaderStatus(stream.status, isMock ? MOCK_INVESTIGATION.status : "running");
+
+  // Selected node entity lookup
+  const selectedNode = React.useMemo(
+    () => stream.nodes.find((n) => n.id === selectedNodeId) || null,
+    [stream.nodes, selectedNodeId],
+  );
 
   // Timeline Milestone Click -> Canvas Centering & Node Selection (AC-1, AC-5)
   const handleSelectEvent = useCallback((eventId: string) => {
@@ -75,6 +83,7 @@ export function InvestigationShell({
     const event = stream.timelineEvents.find((e) => e.id === eventId);
     if (event?.nodeId) {
       setSelectedNodeId(event.nodeId);
+      setIsInspectorDrawerOpen(true);
       setFocusNodeTarget({ nodeId: event.nodeId, timestamp: Date.now() });
     }
   }, [stream.timelineEvents]);
@@ -84,8 +93,11 @@ export function InvestigationShell({
     setSelectedNodeId(nodeId);
     if (!nodeId) {
       setSelectedEventId(null);
+      setIsInspectorDrawerOpen(false);
       return;
     }
+    setIsInspectorDrawerOpen(true);
+    setFocusNodeTarget({ nodeId, timestamp: Date.now() });
     const matchingEvent = stream.timelineEvents.find((e) => e.nodeId === nodeId);
     if (matchingEvent) {
       setSelectedEventId(matchingEvent.id);
@@ -127,6 +139,7 @@ export function InvestigationShell({
             hoveredNodeId={hoveredNodeId}
             focusNodeTarget={focusNodeTarget}
             onSelectNode={handleSelectNode}
+            onOpenDrawer={() => setIsInspectorDrawerOpen(true)}
           />
 
           {/* Stale Connection & Retry Indicator (AC-7) */}
@@ -152,6 +165,19 @@ export function InvestigationShell({
             logs={stream.telemetryLogs}
             isOpen={isTerminalOpen}
             onToggle={() => setIsTerminalOpen(!isTerminalOpen)}
+          />
+
+          {/* Feature 25: Node Inspector Drawer (Right Slide-Out) */}
+          <NodeInspectorDrawer
+            node={selectedNode}
+            nodes={stream.nodes}
+            edges={stream.edges}
+            isOpen={isInspectorDrawerOpen}
+            onClose={() => setIsInspectorDrawerOpen(false)}
+            onSelectNode={handleSelectNode}
+            onExploreRabbitHole={(n) => {
+              console.log("[RabbitHole] Requested inquiry for node:", n.id);
+            }}
           />
         </div>
 
