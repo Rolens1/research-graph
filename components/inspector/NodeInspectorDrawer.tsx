@@ -7,7 +7,6 @@ import {
   Compass,
   AlertTriangle,
   HelpCircle,
-  ShieldCheck,
 } from "lucide-react";
 
 // 2. Internal imports
@@ -15,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { GraphNodeData, GraphEdgeData } from "@/types/graph";
 import { NodeInspectorHeader } from "./NodeInspectorHeader";
 import { NodeCausalConnections } from "./NodeCausalConnections";
+import { SourceSnippetList } from "./SourceSnippetList";
 
 // 3. Type definitions
 type Props = {
@@ -52,7 +52,6 @@ function NodeInspectorDrawerComponent({
   if (!node && !isOpen) return null;
 
   const isDisputed = Boolean(node?.isDisputed || node?.entityType === "dispute");
-  const sourceCount = node?.sources?.length ?? 0;
 
   return (
     <aside
@@ -166,17 +165,9 @@ function NodeInspectorDrawerComponent({
             </p>
           </div>
 
-          {/* Source Citations Teaser (Feature 26 integration anchor) */}
+          {/* Feature 26: Verifiable Source Citations */}
           <div className="pt-2 border-t border-border/60">
-            <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-              <span className="flex items-center gap-1.5 font-semibold uppercase tracking-wider">
-                <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-                <span>Verified Citations</span>
-              </span>
-              <span>
-                {sourceCount} {sourceCount === 1 ? "source" : "sources"}
-              </span>
-            </div>
+            <SourceSnippetList sources={node.sources} />
           </div>
         </div>
       )}
